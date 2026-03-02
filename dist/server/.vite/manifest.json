@@ -9,16 +9,23 @@
     "src": "node_modules/react-dom/server.react-server.js",
     "isDynamicEntry": true
   },
+  "node_modules/vinext/dist/shims/og.js": {
+    "file": "assets/og--ydUvv3h.js",
+    "name": "og",
+    "src": "node_modules/vinext/dist/shims/og.js",
+    "isDynamicEntry": true
+  },
   "virtual:cloudflare/worker-entry": {
     "file": "index.js",
     "name": "index",
     "src": "virtual:cloudflare/worker-entry",
     "isEntry": true,
     "dynamicImports": [
-      "node_modules/react-dom/server.react-server.js"
+      "node_modules/react-dom/server.react-server.js",
+      "node_modules/vinext/dist/shims/og.js"
     ],
     "css": [
-      "assets/index-By_CJSi6.css"
+      "assets/index-DX7xJVEV.css"
     ]
   }
 }
