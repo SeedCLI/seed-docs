@@ -1,0 +1,20 @@
+{
+  "node_modules/react-dom/server.react-server.js": {
+    "file": "assets/server.react-server-CENK6D1j.js",
+    "name": "server.react-server",
+    "src": "node_modules/react-dom/server.react-server.js",
+    "isDynamicEntry": true
+  },
+  "virtual:cloudflare/worker-entry": {
+    "file": "index.js",
+    "name": "index",
+    "src": "virtual:cloudflare/worker-entry",
+    "isEntry": true,
+    "dynamicImports": [
+      "node_modules/react-dom/server.react-server.js"
+    ],
+    "css": [
+      "assets/index-DBUd8z_m.css"
+    ]
+  }
+}
