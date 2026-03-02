@@ -1,0 +1,255 @@
+---
+title: Prompt
+description: Interactive prompts with full type inference.
+---
+
+```bash tab="Install"
+bun add @seedcli/prompt
+```
+
+The prompt module provides interactive terminal prompts powered by `@inquirer/prompts`, with added type inference and a consistent API.
+
+## Input
+
+Prompt for text input:
+
+```ts
+const name = await seed.prompt.input({ message: 'What is your name?' })
+
+// With options
+const email = await seed.prompt.input({
+  message: 'Email address?',
+  default: 'user@example.com',
+  validate: (value) => {
+    if (!value.includes('@')) return 'Must be a valid email'
+    return true
+  },
+  transformer: (value) => value.toLowerCase().trim(),
+})
+```
+
+### Input Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `message` | `string` | Prompt message (required) |
+| `default` | `string` | Default value |
+| `required` | `boolean` | Whether input is required |
+| `validate` | `(value: string) => boolean \| string` | Validation function |
+| `transformer` | `(value: string) => string` | Transform before returning |
+
+## Number
+
+Prompt for a numeric value:
+
+```ts
+const port = await seed.prompt.number({
+  message: 'Port number?',
+  default: 3000,
+  min: 1,
+  max: 65535,
+})
+```
+
+### Number Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `message` | `string` | Prompt message (required) |
+| `default` | `number` | Default value |
+| `min` | `number` | Minimum allowed value |
+| `max` | `number` | Maximum allowed value |
+| `step` | `number` | Increment step |
+| `required` | `boolean` | Whether input is required |
+| `validate` | `(value: number \| undefined) => boolean \| string` | Validation function |
+
+## Confirm
+
+Yes/no confirmation:
+
+```ts
+const proceed = await seed.prompt.confirm({ message: 'Deploy to production?' })
+
+const overwrite = await seed.prompt.confirm({
+  message: 'File exists. Overwrite?',
+  default: false,
+})
+```
+
+## Password
+
+Masked input for secrets:
+
+```ts
+const token = await seed.prompt.password({
+  message: 'API token?',
+  mask: '*',
+  validate: (value) => {
+    if (value.length < 8) return 'Token must be at least 8 characters'
+    return true
+  },
+})
+```
+
+## Select
+
+Single-choice selection:
+
+```ts
+// Simple string choices
+const env = await seed.prompt.select({
+  message: 'Target environment?',
+  choices: ['development', 'staging', 'production'] as const,
+})
+// env is typed as 'development' | 'staging' | 'production'
+
+// Labeled choices
+const db = await seed.prompt.select({
+  message: 'Database?',
+  choices: [
+    { name: 'PostgreSQL', value: 'postgres' },
+    { name: 'MySQL', value: 'mysql' },
+    { name: 'SQLite', value: 'sqlite', description: 'File-based, no server needed' },
+  ] as const,
+})
+// db is typed as 'postgres' | 'mysql' | 'sqlite'
+```
+
+### Select Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `message` | `string` | Prompt message (required) |
+| `choices` | `ReadonlyArray<Choice<T> \| T>` | Available choices (required) |
+| `default` | `T` | Pre-selected value |
+| `loop` | `boolean` | Enable list wrapping |
+
+### Choice Object
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | `string` | Display label |
+| `value` | `T` | Value returned on selection |
+| `description` | `string` | Help text shown below |
+| `disabled` | `boolean \| string` | Disable with optional reason |
+
+## Multiselect
+
+Multiple-choice selection:
+
+```ts
+const features = await seed.prompt.multiselect({
+  message: 'Select features:',
+  choices: ['typescript', 'eslint', 'prettier', 'testing'] as const,
+  required: true,
+})
+// features is typed as ReadonlyArray<'typescript' | 'eslint' | 'prettier' | 'testing'>
+```
+
+### Multiselect Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `message` | `string` | Prompt message (required) |
+| `choices` | `ReadonlyArray<Choice<T> \| T>` | Available choices (required) |
+| `default` | `ReadonlyArray<T>` | Pre-selected values |
+| `required` | `boolean` | At least one required |
+| `loop` | `boolean` | Enable list wrapping |
+| `validate` | `(value: ReadonlyArray<T>) => boolean \| string` | Validation function |
+
+## Autocomplete
+
+Search and select with typeahead:
+
+```ts
+const pkg = await seed.prompt.autocomplete({
+  message: 'Search packages:',
+  source: async (input) => {
+    if (!input) return []
+    const res = await fetch(`https://registry.npmjs.org/-/v1/search?text=${input}`)
+    const data = await res.json()
+    return data.objects.map((o: any) => o.package.name)
+  },
+})
+```
+
+### Autocomplete Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `message` | `string` | Prompt message (required) |
+| `source` | `(input: string \| undefined) => Promise<ReadonlyArray<Choice<T> \| T>>` | Async source function (required) |
+| `default` | `T` | Default value |
+
+## Editor
+
+Open the user's editor for long-form input:
+
+```ts
+const message = await seed.prompt.editor({
+  message: 'Commit message:',
+  default: 'feat: ',
+  postfix: '.md',
+})
+```
+
+### Editor Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `message` | `string` | Prompt message (required) |
+| `default` | `string` | Initial editor content |
+| `postfix` | `string` | Temp file extension (for syntax highlighting) |
+| `validate` | `(value: string) => boolean \| string` | Validation function |
+| `waitForUserInput` | `boolean` | Wait for editor to close |
+
+## Form
+
+Combine multiple prompts into a single form:
+
+```ts
+const answers = await seed.prompt.form<{
+  name: string
+  version: string
+  private: boolean
+}>([
+  { name: 'name', type: 'input', message: 'Project name?' },
+  { name: 'version', type: 'input', message: 'Version?', default: '0.0.1' },
+  { name: 'private', type: 'confirm', message: 'Private?', default: true },
+  {
+    name: 'license',
+    type: 'select',
+    message: 'License?',
+    choices: ['MIT', 'Apache-2.0', 'GPL-3.0'],
+  },
+])
+```
+
+### Form Field
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | `string` | Field name (key in result) |
+| `type` | `'input' \| 'number' \| 'confirm' \| 'password' \| 'select'` | Prompt type |
+| `message` | `string` | Prompt message |
+| `default` | `unknown` | Default value |
+| `choices` | `ReadonlyArray<Choice \| string>` | Choices (for `select` type) |
+| `validate` | `(value: unknown) => boolean \| string` | Validation function |
+
+## Cancellation
+
+All prompts throw `PromptCancelledError` when the user presses Ctrl+C:
+
+```ts
+import { PromptCancelledError } from '@seedcli/prompt'
+
+try {
+  const name = await seed.prompt.input({ message: 'Name?' })
+} catch (error) {
+  if (error instanceof PromptCancelledError) {
+    seed.print.info('Cancelled.')
+    return
+  }
+  throw error
+}
+```

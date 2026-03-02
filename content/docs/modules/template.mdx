@@ -1,0 +1,143 @@
+---
+title: Template
+description: Generate files from Eta templates.
+---
+
+```bash tab="Install"
+bun add @seedcli/template
+```
+
+The template module uses [Eta](https://eta.js.org/) as its template engine — a TypeScript-native engine that's 3x faster than EJS with compatible syntax.
+
+## Generate a Single File
+
+```ts
+await seed.template.generate({
+  template: 'component',       // Template name (resolved from templates dir)
+  target: 'src/components/Button.tsx',
+  props: {
+    name: 'Button',
+    hasStyles: true,
+  },
+})
+```
+
+The template file at `templates/component.ts.eta`:
+```text
+import React from 'react'
+<% if (it.hasStyles) { %>
+import styles from './<%= it.name %>.module.css'
+<% } %>
+
+export function <%= it.name %>() {
+  return <div<% if (it.hasStyles) { %> className={styles.root}<% } %>>
+    <%= it.name %>
+  </div>
+}
+```
+
+### Generate Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `template` | `string` | Template name (required) |
+| `target` | `string` | Output file path (required) |
+| `props` | `Record<string, unknown>` | Template variables |
+| `directory` | `string` | Templates directory override |
+| `overwrite` | `boolean` | Overwrite existing files (default: `false`) |
+
+## Render to a File
+
+Render a template string directly to a file:
+
+```ts
+await seed.template.render({
+  source: '<%= it.name %> v<%= it.version %>',
+  target: 'VERSION.txt',
+  props: { name: 'My App', version: '1.0.0' },
+})
+```
+
+### Render Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `source` | `string` | Template string (required) |
+| `target` | `string` | Output file path (required) |
+| `props` | `Record<string, unknown>` | Template variables |
+| `overwrite` | `boolean` | Overwrite existing (default: `false`) |
+
+## Render to String
+
+Render a template and return the result without writing a file:
+
+```ts
+const result = await seed.template.renderString(
+  'Hello, <%= it.name %>!',
+  { name: 'World' }
+)
+// => 'Hello, World!'
+```
+
+## Render a File to String
+
+```ts
+const result = await seed.template.renderFile(
+  'templates/readme.md.eta',
+  { projectName: 'my-app', version: '1.0.0' }
+)
+```
+
+## Scaffold a Directory
+
+Copy and process an entire template directory:
+
+```ts
+await seed.template.directory({
+  source: 'templates/project',
+  target: 'my-new-project',
+  props: {
+    name: 'my-new-project',
+    author: 'John Doe',
+    useTypeScript: true,
+  },
+  ignore: ['node_modules/**', '.git/**'],
+  rename: {
+    '_package.json': 'package.json',
+    '_gitignore': '.gitignore',
+  },
+})
+```
+
+### Directory Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `source` | `string` | Source template directory (required) |
+| `target` | `string` | Output directory (required) |
+| `props` | `Record<string, unknown>` | Template variables |
+| `overwrite` | `boolean` | Overwrite existing files |
+| `ignore` | `string[]` | Glob patterns to skip |
+| `rename` | `Record<string, string>` | Rename files during copy |
+
+Files with `.eta` extension are processed as templates (extension is stripped). Other files are copied as-is.
+
+## Template Syntax
+
+Eta uses a syntax similar to EJS:
+
+| Syntax | Description |
+|--------|-------------|
+| `<%= it.name %>` | Output escaped value |
+| `<%~ it.html %>` | Output raw (unescaped) value |
+| `<% if (cond) { %> ... <% } %>` | JavaScript logic |
+| `<% for (const item of it.items) { %> ... <% } %>` | Loops |
+| `<%/* comment */%>` | Comments (not output) |
+
+All template variables are accessed via the `it` object:
+
+```text
+<% for (const field of it.fields) { %>
+  <%= field.name %>: <%= field.type %>;
+<% } %>
+```

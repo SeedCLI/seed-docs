@@ -1,0 +1,265 @@
+---
+title: Builder API
+description: Configure your CLI with the fluent Builder pattern.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+The Builder API provides a fluent, chainable interface for configuring every aspect of your CLI. It produces a `Runtime` that can be executed with `.run()`.
+
+## Basic Usage
+
+```ts title="src/cli.ts"
+import { build } from '@seedcli/core'
+
+const runtime = build('my-cli')
+  .src(import.meta.dir)
+  .version('1.0.0')
+  .help()
+  .debug()
+  .create()
+
+await runtime.run()
+```
+
+## Builder Methods
+
+### `build(brand)`
+
+Creates a new Builder instance. The `brand` string is your CLI's name and is used in help output, error messages, and metadata.
+
+```ts
+const builder = build('my-cli')
+```
+
+### `.src(dir)`
+
+Auto-discover commands and extensions from a directory.
+
+```ts
+builder.src(import.meta.dir)
+// Discovers:
+//   src/commands/*.ts  → registered as commands
+//   src/extensions/*.ts → registered as extensions
+```
+
+### `.command(cmd)` / `.commands(cmds)`
+
+Register commands manually:
+
+```ts
+builder
+  .command(deployCommand)
+  .commands([initCommand, buildCommand])
+```
+
+### `.defaultCommand(cmd)`
+
+Set a fallback command that runs when no command is specified:
+
+```ts
+builder.defaultCommand(
+  command({
+    name: 'default',
+    run: (seed) => {
+      seed.print.info('Run --help to see available commands')
+    },
+  })
+)
+```
+
+### `.plugin(name)` / `.plugins(dir)`
+
+Load plugins by name or discover from a directory:
+
+```ts
+// By name (resolved from node_modules)
+builder.plugin('seedcli-plugin-docker')
+builder.plugin(['seedcli-plugin-docker', 'seedcli-plugin-aws'])
+
+// From directory
+builder.plugins('./plugins')
+builder.plugins('./plugins', { prefix: 'my-' })
+```
+
+### `.extension(ext)`
+
+Register an extension:
+
+```ts
+builder.extension(
+  defineExtension({
+    name: 'auth',
+    setup: async (seed) => {
+      // Initialize auth state
+    },
+    teardown: async (seed) => {
+      // Cleanup
+    },
+  })
+)
+```
+
+### `.help(options?)` / `.noHelp()`
+
+Enable or disable the built-in help system:
+
+```ts
+// Enable with defaults
+builder.help()
+
+// Custom options
+builder.help({
+  showAliases: true,
+  showHidden: false,
+})
+
+// Disable entirely
+builder.noHelp()
+```
+
+When enabled, `--help` and `-h` flags are automatically added to all commands.
+
+### `.version(version?)` / `.noVersion()`
+
+Enable or disable the `--version` flag:
+
+```ts
+// Auto-detect from package.json
+builder.version()
+
+// Explicit version string
+builder.version('2.1.0')
+
+// Disable
+builder.noVersion()
+```
+
+### `.debug()`
+
+Enables `--debug` and `--verbose` flags. When active, `seed.meta.debug` is `true` and `seed.print.debug()` calls are visible.
+
+```ts
+builder.debug()
+```
+
+### `.completions()`
+
+Enables shell completion generation. Adds a `completions` subcommand:
+
+```bash
+my-cli completions bash  # Output bash completions
+my-cli completions zsh   # Output zsh completions
+my-cli completions install  # Install for current shell
+```
+
+### `.middleware(fn)`
+
+Add global middleware that runs before every command:
+
+```ts
+builder.middleware(async (seed, next) => {
+  const start = Date.now()
+  await next()
+  seed.print.muted(`Completed in ${Date.now() - start}ms`)
+})
+```
+
+### `.onReady(fn)`
+
+Hook that runs after setup but before command execution:
+
+```ts
+builder.onReady((seed) => {
+  seed.print.debug('CLI initialized')
+})
+```
+
+### `.onError(fn)`
+
+Global error handler:
+
+```ts
+builder.onError((error, seed) => {
+  seed.print.error(`Failed: ${error.message}`)
+  if (seed.meta.debug) {
+    console.error(error.stack)
+  }
+})
+```
+
+### `.exclude(modules)`
+
+Exclude modules for performance in lightweight CLIs:
+
+```ts
+builder.exclude(['http', 'template', 'patching'])
+```
+
+### `.create()`
+
+Build the runtime. Returns a `Runtime` instance:
+
+```ts
+const runtime = builder.create()
+```
+
+## Runtime
+
+The `Runtime` object has a single method:
+
+### `runtime.run(argv?)`
+
+Execute the CLI:
+
+```ts
+// Use process.argv (default)
+await runtime.run()
+
+// Custom argv (useful for testing)
+await runtime.run(['deploy', 'staging', '--force'])
+```
+
+## Runtime Lifecycle
+
+When `runtime.run()` is called, the following happens in order:
+
+1. Register SIGINT/SIGTERM handlers
+2. Strip `--debug`/`--verbose` flags (if enabled)
+3. Parse raw argv
+4. Load config files (if configured)
+5. Discover and load plugins
+6. Register extensions
+7. Assemble the `seed` context (modules loaded lazily)
+8. Run `onReady` hooks
+9. Route to the matching command
+10. Run extension `setup` functions (topological order)
+11. Run global middleware
+12. Run command-level middleware
+13. Execute `command.run(seed)`
+14. Run extension `teardown` (reverse order)
+15. Cleanup and exit
+
+## The `run()` Shortcut
+
+For simple CLIs that don't need the full builder, use the `run()` function:
+
+```ts
+import { run, command, arg } from '@seedcli/core'
+
+await run({
+  name: 'my-cli',
+  version: '1.0.0',
+  commands: [
+    command({
+      name: 'hello',
+      args: { name: arg({ type: 'string', required: true }) },
+      run: (seed) => seed.print.info(`Hello, ${seed.args.name}!`),
+    }),
+  ],
+})
+```
+
+<Callout type="info">
+  `run()` creates a Builder internally — it's syntactic sugar for quick scripts and simple CLIs.
+</Callout>

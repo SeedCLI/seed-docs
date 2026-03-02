@@ -1,0 +1,158 @@
+---
+title: Config
+description: Load configuration files with automatic format detection.
+---
+
+```bash tab="Install"
+bun add @seedcli/config
+```
+
+The config module uses [c12](https://github.com/unjs/c12) (the config loader that powers Nuxt) to load configuration from multiple file formats with layered merging.
+
+## Loading Config
+
+```ts
+const result = await seed.config.load<MyConfig>('myapp')
+```
+
+This searches for config files in the following order:
+
+1. `myapp.config.ts`
+2. `myapp.config.js`
+3. `myapp.config.mjs`
+4. `.myapprc`
+5. `.myapprc.json`
+6. `.myapprc.yaml`
+7. `.myapprc.toml`
+8. `package.json` → `myapp` field
+
+### Load Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `name` | `string` | Config name to search for (required) |
+| `defaults` | `Partial<T>` | Default configuration values |
+| `overrides` | `Partial<T>` | Override values (highest precedence) |
+| `cwd` | `string` | Working directory (default: `process.cwd()`) |
+| `envName` | `string` | Environment name for env-specific overrides |
+| `dotenv` | `boolean` | Load `.env` files |
+| `packageJson` | `boolean \| string` | Read from `package.json` field |
+| `rcFile` | `boolean \| string` | Read RC file |
+| `globalRc` | `boolean` | Check global RC file |
+
+### Result
+
+```ts
+interface ResolvedConfig<T> {
+  config: T             // Merged config object
+  cwd: string           // Resolved working directory
+  configFile?: string   // Path to the config file found
+  layers: ConfigLayer[] // All config layers
+}
+
+interface ConfigLayer {
+  config: Record<string, unknown>
+  source?: string       // Where this config came from
+}
+```
+
+## Default Values
+
+```ts
+interface AppConfig {
+  outputDir: string
+  verbose: boolean
+  plugins: string[]
+}
+
+const { config } = await seed.config.load<AppConfig>('myapp', {
+  defaults: {
+    outputDir: 'dist',
+    verbose: false,
+    plugins: [],
+  },
+})
+// config.outputDir is guaranteed to be a string
+```
+
+## Loading a Specific File
+
+```ts
+const config = await seed.config.loadFile<{ port: number }>('config/server.json')
+```
+
+## Getting Nested Values
+
+Use dot-notation or bracket-notation to access nested config values:
+
+```ts
+// Dot notation
+const port = seed.config.get(config, 'server.port')
+
+// Bracket notation
+const host = seed.config.get(config, 'server.host', 'localhost')
+```
+
+The `get` function takes an object and a path string, with an optional default value.
+
+## Builder Integration
+
+When using the Builder API, config is loaded automatically:
+
+```ts
+const runtime = build('my-cli')
+  .config({
+    name: 'myapp',
+    defaults: {
+      outputDir: 'dist',
+      verbose: false,
+    },
+  })
+  .create()
+```
+
+The user creates a config file:
+
+```ts title="myapp.config.ts"
+import { defineConfig } from '@seedcli/core'
+
+export default defineConfig({
+  outputDir: 'build',
+  verbose: true,
+})
+```
+
+`defineConfig` is a passthrough function that provides type checking for the config object.
+
+## Environment-Specific Config
+
+```ts
+const { config } = await seed.config.load('myapp', {
+  envName: 'production',
+})
+```
+
+This additionally searches for `myapp.config.production.ts` and merges it over the base config.
+
+## Config Layers
+
+The config system merges multiple layers in order of precedence:
+
+```
+1. defaults (lowest)
+2. config file
+3. environment-specific config
+4. package.json field
+(highest wins)
+```
+
+```ts
+const result = await seed.config.load('myapp', {
+  defaults: { port: 3000 },
+})
+
+// Inspect all layers
+for (const layer of result.layers) {
+  console.log(`${layer.source}: ${JSON.stringify(layer.config)}`)
+}
+```

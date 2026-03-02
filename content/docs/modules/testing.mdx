@@ -1,0 +1,204 @@
+---
+title: Testing
+description: Test your CLI commands with mocked prompts, config, and system calls.
+---
+
+```bash tab="Install"
+bun add @seedcli/testing
+```
+
+The testing module provides utilities for testing CLI commands in isolation, with support for mocking prompts, config, system calls, and capturing output.
+
+## Creating a Test CLI
+
+```ts
+import { createTestCli } from '@seedcli/testing'
+import { describe, test, expect } from 'bun:test'
+
+// Build your runtime as usual
+const runtime = build('my-cli')
+  .src('./src')
+  .create()
+
+describe('greet command', () => {
+  test('greets the user', async () => {
+    const cli = createTestCli(runtime)
+    const result = await cli.run('greet Alice')
+
+    expect(result.stdout).toContain('Hello, Alice!')
+    expect(result.exitCode).toBe(0)
+  })
+
+  test('shows error for missing name', async () => {
+    const cli = createTestCli(runtime)
+    const result = await cli.run('greet')
+
+    expect(result.stderr).toContain('required')
+    expect(result.exitCode).toBe(1)
+  })
+})
+```
+
+## Test Result
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `stdout` | `string` | Captured standard output |
+| `stderr` | `string` | Captured standard error |
+| `exitCode` | `number` | Process exit code |
+
+## Mocking Prompts
+
+Provide automatic responses to interactive prompts:
+
+```ts
+const cli = createTestCli(runtime)
+  .mockPrompt({
+    'Project name?': 'my-app',
+    'Use TypeScript?': true,
+    'License?': 'MIT',
+  })
+
+const result = await cli.run('init')
+expect(result.stdout).toContain('my-app')
+```
+
+## Mocking Config
+
+Override config values for tests:
+
+```ts
+const cli = createTestCli(runtime)
+  .mockConfig({
+    outputDir: 'test-output',
+    verbose: false,
+    plugins: [],
+  })
+
+const result = await cli.run('build')
+```
+
+## Mocking System Commands
+
+Mock shell command responses:
+
+```ts
+const cli = createTestCli(runtime)
+  .mockSystem('git status', {
+    stdout: 'On branch main\nnothing to commit',
+  })
+  .mockSystem('docker --version', {
+    stdout: 'Docker version 24.0.0',
+  })
+
+const result = await cli.run('deploy')
+```
+
+## Chaining Mocks
+
+Mocks are chainable:
+
+```ts
+const result = await createTestCli(runtime)
+  .mockPrompt({ 'Continue?': true })
+  .mockConfig({ env: 'test' })
+  .mockSystem('git status', { stdout: 'clean', stderr: '', exitCode: 0 })
+  .env({ NODE_ENV: 'test' })
+  .run('deploy staging')
+```
+
+## Mock Seed
+
+Create a mock seed context for unit testing command handlers directly. All module methods are no-ops by default — override specific properties when you need custom behavior:
+
+```ts
+import { mockSeed } from '@seedcli/testing'
+
+test('deploy handler', async () => {
+  const seed = mockSeed({
+    args: { environment: 'staging' },
+    flags: { force: true },
+  })
+
+  await deployCommand.run(seed)
+})
+```
+
+### MockSeedOptions
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `args` | `Record<string, unknown>` | Mock argument values |
+| `flags` | `Record<string, unknown>` | Mock flag values |
+| `commandName` | `string` | Command name (default: `'test'`) |
+| `brand` | `string` | CLI brand (default: `'test-cli'`) |
+| `version` | `string` | Version string (default: `'0.0.0'`) |
+
+## Output Interceptor
+
+Capture console output and exit codes by intercepting `console.log`, `console.error`, and `process.exitCode`:
+
+```ts
+import { createInterceptor } from '@seedcli/testing'
+
+test('output formatting', async () => {
+  const interceptor = createInterceptor()
+  interceptor.start()
+
+  console.log('Hello, world!')
+  console.error('Something went wrong')
+
+  interceptor.stop()
+
+  expect(interceptor.stdout).toContain('Hello, world!')
+  expect(interceptor.stderr).toContain('Something went wrong')
+  expect(interceptor.exitCode).toBe(0)
+})
+```
+
+Note: `createTestCli` uses an interceptor internally — you don't need to create one manually when using `createTestCli`.
+
+## Testing Patterns
+
+### Testing flag validation
+
+```ts
+test('rejects invalid port', async () => {
+  const result = await createTestCli(runtime).run('serve --port 99999')
+  expect(result.stderr).toContain('Port must be between')
+  expect(result.exitCode).toBe(1)
+})
+```
+
+### Testing interactive flows
+
+```ts
+test('init with prompts', async () => {
+  const result = await createTestCli(runtime)
+    .mockPrompt({
+      'Project name?': 'test-project',
+      'Use TypeScript?': true,
+      'Select features:': ['eslint', 'prettier'],
+    })
+    .run('init')
+
+  expect(result.stdout).toContain('test-project')
+  expect(result.exitCode).toBe(0)
+})
+```
+
+### Testing error handling
+
+```ts
+test('handles network errors', async () => {
+  const result = await createTestCli(runtime)
+    .mockSystem('curl https://api.example.com', {
+      stdout: '',
+      stderr: 'Connection refused',
+      exitCode: 1,
+    })
+    .run('fetch-data')
+
+  expect(result.stderr).toContain('Failed to fetch')
+})
+```

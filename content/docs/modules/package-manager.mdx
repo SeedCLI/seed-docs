@@ -1,0 +1,118 @@
+---
+title: Package Manager
+description: Detect and operate with npm, yarn, pnpm, or bun.
+---
+
+```bash tab="Install"
+bun add @seedcli/package-manager
+```
+
+The package manager module auto-detects which package manager a project uses and provides a unified API for installing, removing, and running scripts.
+
+## Detection
+
+```ts
+const pm = await seed.packageManager.detect()
+// => 'bun' | 'npm' | 'yarn' | 'pnpm'
+```
+
+Detection priority:
+1. `bun.lock` / `bun.lockb` → `bun`
+2. `package-lock.json` → `npm`
+3. `yarn.lock` → `yarn`
+4. `pnpm-lock.yaml` → `pnpm`
+5. `packageManager` field in `package.json`
+6. Default: `bun`
+
+## Install Packages
+
+```ts
+// Install dependencies
+await seed.packageManager.install(['express', 'cors'])
+
+// Dev dependencies
+await seed.packageManager.installDev(['typescript', '@types/node'])
+
+// With options
+await seed.packageManager.install(['express'], {
+  cwd: './my-project',
+  exact: true,     // Pin exact versions
+  global: false,
+  silent: true,    // Suppress output
+})
+```
+
+### Install Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `cwd` | `string` | `process.cwd()` | Working directory |
+| `exact` | `boolean` | `false` | Pin exact versions |
+| `global` | `boolean` | `false` | Install globally |
+| `silent` | `boolean` | `false` | Suppress output |
+
+## Remove Packages
+
+```ts
+await seed.packageManager.remove(['express', 'cors'])
+```
+
+## Run Scripts
+
+```ts
+await seed.packageManager.run('build')
+await seed.packageManager.run('test', { cwd: './packages/core' })
+await seed.packageManager.run('lint', { args: ['--fix'], silent: true })
+```
+
+### Run Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `cwd` | `string` | `process.cwd()` | Working directory |
+| `args` | `string[]` | — | Extra arguments passed after `--` |
+| `silent` | `boolean` | `false` | Suppress output |
+
+## Package Manager Instance
+
+For more control, create a specific package manager instance:
+
+```ts
+// Explicit name
+const pm = await seed.packageManager.create('bun')
+
+// Or auto-detect (same as detect + create)
+const pm = await seed.packageManager.create()
+
+await pm.install(['express'])
+await pm.installDev(['typescript'])
+await pm.remove(['old-package'])
+await pm.run('build')
+
+const version = await pm.version()  // => '1.3.5'
+console.log(pm.name)                // => 'bun'
+```
+
+## Get Commands
+
+See the underlying commands that would be run for a specific package manager:
+
+```ts
+const commands = seed.packageManager.getCommands('bun')
+// {
+//   install: 'bun install',
+//   add: 'bun add',
+//   addDev: ['bun', 'add', '-d'],
+//   remove: 'bun remove',
+//   run: 'bun run',
+// }
+
+const npmCmds = seed.packageManager.getCommands('npm')
+// {
+//   install: 'npm install',
+//   add: 'npm install',
+//   addDev: ['npm', 'install', '--save-dev'],
+//   remove: 'npm uninstall',
+//   run: 'npm run',
+// }
+```

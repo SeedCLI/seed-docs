@@ -1,0 +1,165 @@
+---
+title: Middleware
+description: Intercept and transform command execution with middleware.
+---
+
+Middleware lets you run code before and after command execution. It follows the classic "onion model" pattern — each middleware wraps the next, forming a chain.
+
+## Defining Middleware
+
+A middleware is a function that receives the `seed` context and a `next` function:
+
+```ts
+import type { Middleware } from '@seedcli/core'
+
+const timing: Middleware = async (seed, next) => {
+  const start = Date.now()
+  await next()  // Run the next middleware or command
+  const elapsed = Date.now() - start
+  seed.print.muted(`Completed in ${elapsed}ms`)
+}
+```
+
+## Global Middleware
+
+Global middleware runs for every command:
+
+```ts
+build('my-cli')
+  .middleware(async (seed, next) => {
+    seed.print.debug(`Running: ${seed.meta.commandName}`)
+    await next()
+  })
+  .middleware(async (seed, next) => {
+    try {
+      await next()
+    } catch (error) {
+      seed.print.error(`Command failed: ${error.message}`)
+      process.exit(1)
+    }
+  })
+  .create()
+```
+
+Multiple middleware are executed in the order they're registered.
+
+## Command-Level Middleware
+
+Middleware can be scoped to individual commands:
+
+```ts
+const requireAuth: Middleware = async (seed, next) => {
+  if (!seed.auth?.isAuthenticated) {
+    seed.print.error('Authentication required. Run "my-cli login" first.')
+    return
+  }
+  await next()
+}
+
+command({
+  name: 'deploy',
+  middleware: [requireAuth],
+  run: async (seed) => {
+    // Only runs if authenticated
+  },
+})
+```
+
+## Execution Order
+
+Middleware forms a nested chain:
+
+```
+Global middleware 1
+  → Global middleware 2
+    → Command middleware 1
+      → Command middleware 2
+        → command.run(seed)
+      ← Command middleware 2
+    ← Command middleware 1
+  ← Global middleware 2
+← Global middleware 1
+```
+
+## Common Patterns
+
+### Error Handling
+
+```ts
+const errorHandler: Middleware = async (seed, next) => {
+  try {
+    await next()
+  } catch (error) {
+    if (seed.meta.debug) {
+      console.error(error)
+    } else {
+      seed.print.error(error.message)
+    }
+    process.exit(1)
+  }
+}
+```
+
+### Logging
+
+```ts
+const logger: Middleware = async (seed, next) => {
+  seed.print.debug(`→ ${seed.meta.commandName}`)
+  seed.print.debug(`  args: ${JSON.stringify(seed.args)}`)
+  seed.print.debug(`  flags: ${JSON.stringify(seed.flags)}`)
+  await next()
+  seed.print.debug(`← ${seed.meta.commandName}`)
+}
+```
+
+### Confirmation
+
+```ts
+const confirmDestructive: Middleware = async (seed, next) => {
+  if (!seed.flags.force) {
+    const ok = await seed.prompt.confirm({ message: 'This is a destructive action. Continue?' })
+    if (!ok) {
+      seed.print.info('Aborted.')
+      return
+    }
+  }
+  await next()
+}
+```
+
+### Analytics
+
+```ts
+const analytics: Middleware = async (seed, next) => {
+  const start = Date.now()
+  let status = 'success'
+  try {
+    await next()
+  } catch (error) {
+    status = 'error'
+    throw error
+  } finally {
+    await trackEvent({
+      command: seed.meta.commandName,
+      duration: Date.now() - start,
+      status,
+    })
+  }
+}
+```
+
+### Short-Circuiting
+
+If you don't call `next()`, the remaining middleware and command won't execute:
+
+```ts
+const versionCheck: Middleware = async (seed, next) => {
+  const required = '>=1.0.0'
+  const current = seed.meta.version
+  if (!seed.semver.satisfies(current, required)) {
+    seed.print.error(`Version ${current} not supported. Requires ${required}.`)
+    return  // Don't call next() — command won't run
+  }
+  await next()
+}
+```

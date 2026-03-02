@@ -1,0 +1,162 @@
+---
+title: Extensions
+description: Add lifecycle hooks and shared state with extensions.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Extensions provide a way to add setup/teardown lifecycle hooks and shared state to your CLI. They're ideal for cross-cutting concerns like authentication, database connections, or analytics.
+
+## Defining an Extension
+
+```ts title="src/extensions/auth.ts"
+import { defineExtension } from '@seedcli/core'
+
+export default defineExtension({
+  name: 'auth',
+  description: 'Authentication management',
+  setup: async (seed) => {
+    const token = await seed.config.get('authToken')
+    if (!token) {
+      seed.print.warning('Not authenticated. Run "my-cli login" first.')
+    }
+    // Attach to seed for use in commands
+    seed.auth = { token, isAuthenticated: !!token }
+  },
+  teardown: async (seed) => {
+    // Cleanup (optional)
+    seed.print.debug('Auth extension cleaned up')
+  },
+})
+```
+
+## Extension Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `name` | `string` | Unique identifier (required) |
+| `description` | `string` | Human-readable description |
+| `dependencies` | `string[]` | Extensions that must run before this one |
+| `setup` | `(seed: ExtensionSeed) => void \| Promise<void>` | Called before command execution (required) |
+| `teardown` | `(seed: ExtensionSeed) => void \| Promise<void>` | Called after command execution |
+
+`ExtensionSeed` is the same as `Seed` but without `args` and `flags` (since extensions run before command-specific parsing).
+
+## Registration
+
+### Via Builder
+
+```ts
+import { build, defineExtension } from '@seedcli/core'
+
+build('my-cli')
+  .extension(
+    defineExtension({
+      name: 'timing',
+      setup: (seed) => {
+        seed._startTime = Date.now()
+      },
+      teardown: (seed) => {
+        const elapsed = Date.now() - seed._startTime
+        seed.print.muted(`Done in ${elapsed}ms`)
+      },
+    })
+  )
+  .create()
+```
+
+### Via Auto-Discovery
+
+Place extension files in an `extensions/` directory:
+
+```
+src/
+├── commands/
+│   └── deploy.ts
+├── extensions/
+│   ├── auth.ts
+│   └── metrics.ts
+└── cli.ts
+```
+
+```ts title="src/cli.ts"
+build('my-cli')
+  .src(import.meta.dir)  // Discovers extensions/ automatically
+  .create()
+```
+
+Each file should `export default` a `defineExtension()` call.
+
+## Dependencies
+
+Extensions can declare dependencies on other extensions. Dependencies are resolved in topological order — an extension's `setup` runs only after all its dependencies have completed setup.
+
+```ts
+defineExtension({
+  name: 'api-client',
+  dependencies: ['auth'],  // 'auth' setup runs first
+  setup: async (seed) => {
+    const client = seed.http.create({
+      baseURL: 'https://api.example.com',
+      headers: {
+        Authorization: `Bearer ${seed.auth.token}`,
+      },
+    })
+    seed.api = client
+  },
+})
+```
+
+Teardown runs in reverse dependency order — the `api-client` tears down before `auth`.
+
+<Callout type="warn">
+  Circular dependencies are detected at startup and throw an `ExtensionCycleError`.
+</Callout>
+
+## Accessing Extension State
+
+Extensions attach state directly to the `seed` object. For TypeScript type safety, use declaration merging:
+
+```ts title="src/types.ts"
+declare module '@seedcli/core' {
+  interface SeedExtensions {
+    auth: {
+      token: string | undefined
+      isAuthenticated: boolean
+    }
+    api: import('@seedcli/http').HttpClient
+  }
+}
+```
+
+Then in commands:
+
+```ts
+command({
+  name: 'whoami',
+  run: async (seed) => {
+    if (!seed.auth.isAuthenticated) {
+      seed.print.error('Not logged in')
+      return
+    }
+    const { data } = await seed.api.get('/me')
+    seed.print.info(`Logged in as ${data.name}`)
+  },
+})
+```
+
+## Lifecycle Order
+
+1. All extension `setup` functions run (in dependency order)
+2. Global middleware runs
+3. Command middleware runs
+4. `command.run(seed)` executes
+5. All extension `teardown` functions run (reverse dependency order)
+
+```
+setup: auth → api-client → metrics
+                 ↓
+            command.run()
+                 ↓
+teardown: metrics → api-client → auth
+```

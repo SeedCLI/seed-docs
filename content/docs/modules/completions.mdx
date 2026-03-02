@@ -1,0 +1,133 @@
+---
+title: Completions
+description: Generate shell completions for bash, zsh, fish, and PowerShell.
+---
+
+```bash tab="Install"
+bun add @seedcli/completions
+```
+
+The completions module generates shell completion scripts for all four major shells: bash, zsh, fish, and PowerShell. It auto-generates completions from your command definitions.
+
+## Enabling Completions
+
+The easiest way to add shell completions is via the builder:
+
+```ts
+const runtime = build('my-cli')
+  .src(import.meta.dir)
+  .completions()  // Adds a `completions` subcommand
+  .create()
+```
+
+This adds a `completions` command to your CLI:
+
+```bash
+# Output completion script for a specific shell
+my-cli completions bash
+my-cli completions zsh
+my-cli completions fish
+my-cli completions powershell
+
+# Auto-detect shell and install
+my-cli completions install
+```
+
+## Generating Scripts
+
+Generate completion scripts programmatically. Each function takes a `CompletionInfo` object describing your CLI's commands, flags, and arguments:
+
+```ts
+import { bash, zsh, fish, powershell } from '@seedcli/completions'
+
+const info = {
+  brand: 'my-cli',
+  commands: [/* ... */],
+}
+
+const bashScript = bash(info)
+const zshScript = zsh(info)
+const fishScript = fish(info)
+const psScript = powershell(info)
+```
+
+Each function returns a string containing the complete shell script.
+
+When using the builder's `.completions()` method, the `CompletionInfo` is generated automatically from your registered commands.
+
+## Installing Completions
+
+Install completions for the current shell:
+
+```ts
+import { install } from '@seedcli/completions'
+
+await install(info)
+
+// Or specify a shell
+await install(info, 'zsh')
+// Returns { shell: 'zsh', path: '/path/to/completions' }
+```
+
+## Detecting the Current Shell
+
+```ts
+const shell = seed.completions.detect()
+// => 'bash' | 'zsh' | 'fish' | 'powershell'
+```
+
+## What Gets Completed
+
+The completion scripts are auto-generated from your command definitions. They include:
+
+- **Command names** and aliases
+- **Subcommand names**
+- **Flag names** (`--verbose`, `-v`)
+- **Flag values** for flags with `choices`
+- **Argument values** for args with `choices`
+
+```ts
+command({
+  name: 'deploy',
+  alias: ['d'],
+  args: {
+    env: arg({
+      type: 'string',
+      choices: ['staging', 'production'] as const,
+    }),
+  },
+  flags: {
+    region: flag({
+      type: 'string',
+      choices: ['us-east-1', 'eu-west-1', 'ap-south-1'] as const,
+    }),
+  },
+  run: async (seed) => { /* ... */ },
+})
+```
+
+With this definition, typing `my-cli deploy ` and pressing Tab would suggest `staging` and `production`, and `--region ` would suggest the three region options.
+
+## Shell Types
+
+```ts
+type ShellType = 'bash' | 'zsh' | 'fish' | 'powershell'
+```
+
+## Manual Installation
+
+Users can install completions manually by redirecting the output:
+
+```bash
+# Bash
+my-cli completions bash >> ~/.bashrc
+
+# Zsh
+my-cli completions zsh >> ~/.zshrc
+
+# Fish
+my-cli completions fish > ~/.config/fish/completions/my-cli.fish
+
+# PowerShell
+my-cli completions powershell >> $PROFILE
+```

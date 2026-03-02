@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "index",
+    "installation",
+    "quick-start",
+    "llms-txt",
+    "---Concepts---",
+    "...concepts",
+    "---Modules---",
+    "...modules",
+    "---CLI Tools---",
+    "...cli"
+  ]
+}

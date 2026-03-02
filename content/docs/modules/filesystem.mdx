@@ -1,0 +1,207 @@
+---
+title: Filesystem
+description: File operations, path helpers, and directory management.
+---
+
+```bash tab="Install"
+bun add @seedcli/filesystem
+```
+
+The filesystem module wraps Bun's file APIs with a consistent, Promise-based interface for reading, writing, copying, moving, and finding files.
+
+## Reading Files
+
+```ts
+// Read as string
+const content = await seed.filesystem.read('config.json')
+
+// Read as typed JSON
+const pkg = await seed.filesystem.readJson<{ name: string; version: string }>('package.json')
+
+// Read YAML
+const config = await seed.filesystem.readYaml('config.yaml')
+
+// Read TOML
+const cargo = await seed.filesystem.readToml('Cargo.toml')
+
+// Read as Buffer
+const buffer = await seed.filesystem.readBuffer('image.png')
+```
+
+## Writing Files
+
+```ts
+// Write string content
+await seed.filesystem.write('output.txt', 'Hello, world!')
+
+// Write JSON (auto-creates parent directories)
+await seed.filesystem.writeJson('config.json', {
+  name: 'my-app',
+  version: '1.0.0',
+}, {
+  indent: 2,
+  sortKeys: true,
+})
+```
+
+## Copy & Move
+
+```ts
+// Copy a file
+await seed.filesystem.copy('src/template.ts', 'dist/template.ts')
+
+// Copy with options
+await seed.filesystem.copy('src', 'dist', {
+  overwrite: true,
+  filter: (path) => !path.includes('node_modules'),
+})
+
+// Move a file
+await seed.filesystem.move('old-name.ts', 'new-name.ts')
+await seed.filesystem.move('file.ts', 'archive/file.ts', { overwrite: true })
+
+// Rename
+await seed.filesystem.rename('old.ts', 'new.ts')
+```
+
+### Copy Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `overwrite` | `boolean` | `false` | Overwrite existing files |
+| `filter` | `(path: string) => boolean` | — | Filter function |
+
+## Remove
+
+```ts
+// Remove a file or directory (recursive)
+await seed.filesystem.remove('dist')
+await seed.filesystem.remove('temp.txt')
+```
+
+## Finding Files
+
+```ts
+// Find all TypeScript files
+const tsFiles = await seed.filesystem.find('src', {
+  matching: '**/*.ts',
+})
+
+// Find with multiple patterns
+const assets = await seed.filesystem.find('.', {
+  matching: ['**/*.png', '**/*.jpg', '**/*.svg'],
+  ignore: ['node_modules/**'],
+})
+
+// Find directories only
+const dirs = await seed.filesystem.find('.', {
+  directories: true,
+  files: false,
+  matching: 'packages/*',
+})
+```
+
+### Find Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `matching` | `string \| string[]` | — | Glob patterns to match |
+| `ignore` | `string \| string[]` | — | Glob patterns to ignore |
+| `files` | `boolean` | `true` | Include files |
+| `directories` | `boolean` | `false` | Include directories |
+| `recursive` | `boolean` | `true` | Search recursively |
+| `dot` | `boolean` | `false` | Include dotfiles |
+
+## Existence Checks
+
+```ts
+const fileExists = await seed.filesystem.exists('config.json')
+const isAFile = await seed.filesystem.isFile('config.json')
+const isADir = await seed.filesystem.isDirectory('src')
+```
+
+## Path Helpers
+
+Synchronous path utilities:
+
+```ts
+const { path } = seed.filesystem
+
+path.resolve('src', 'commands')     // Absolute path
+path.join('src', 'commands', 'deploy.ts')
+path.dirname('/app/src/cli.ts')     // '/app/src'
+path.basename('/app/src/cli.ts')    // 'cli.ts'
+path.basename('/app/src/cli.ts', '.ts')  // 'cli'
+path.ext('/app/src/cli.ts')         // '.ts'
+path.isAbsolute('/app/src')         // true
+path.relative('/app', '/app/src')   // 'src'
+path.normalize('src/../dist/./out') // 'dist/out'
+path.separator                      // '/' on Unix, '\\' on Windows
+path.home()                         // User home directory
+path.cwd()                          // Current working directory
+```
+
+## Directory Operations
+
+```ts
+// List files in a directory
+const files = await seed.filesystem.list('src/commands')
+// => ['deploy.ts', 'init.ts', 'build.ts']
+
+// List subdirectories
+const dirs = await seed.filesystem.subdirectories('packages')
+// => ['core', 'print', 'prompt', ...]
+
+// Ensure a directory exists (creates if missing)
+await seed.filesystem.ensureDir('output/reports')
+```
+
+## Temp Files & Directories
+
+```ts
+// Create a temporary directory
+const tmpDir = await seed.filesystem.tmpDir({ prefix: 'build-' })
+// => '/tmp/build-abc123'
+
+// Create a temporary file
+const tmpFile = await seed.filesystem.tmpFile({
+  ext: '.json',
+  prefix: 'config-',
+  dir: '/tmp',
+})
+// => '/tmp/config-xyz789.json'
+```
+
+## File Info
+
+```ts
+// Get file stats
+const info = await seed.filesystem.stat('package.json')
+// {
+//   size: 1234,
+//   created: Date,
+//   modified: Date,
+//   accessed: Date,
+//   isFile: true,
+//   isDirectory: false,
+//   isSymlink: false,
+//   permissions: 0o644,
+// }
+
+// Get just the size
+const bytes = await seed.filesystem.size('bundle.js')
+```
+
+## Error Types
+
+```ts
+import { FileNotFoundError, PermissionError, DirectoryNotEmptyError } from '@seedcli/filesystem'
+
+try {
+  await seed.filesystem.read('missing.txt')
+} catch (error) {
+  if (error instanceof FileNotFoundError) {
+    seed.print.error(`File not found: ${error.path}`)
+  }
+}
+```

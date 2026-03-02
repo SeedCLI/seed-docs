@@ -1,0 +1,51 @@
+---
+title: LLMs.txt
+description: How to get AI tools like Cursor, Windsurf, GitHub Copilot, ChatGPT, and Claude to understand CloakMail documentation and best practices.
+---
+
+## What is LLMs.txt?
+
+LLMs.txt is a structured documentation format specifically designed for large language models (LLMs). CloakMail provides LLMs.txt files that contain comprehensive information about our temporary email service, making it easy for AI tools to understand and assist with CloakMail development and integration.
+
+These files are optimized for AI consumption and contain structured information about configuration, API usage, deployment, and more.
+
+## Available Routes
+
+We provide LLMs.txt routes to help AI tools access our documentation:
+
+- `/llms.txt` - Contains a structured overview of all documentation pages and their links
+- `/llms-full.txt` - Provides comprehensive documentation including all page content, implementation details, and examples
+
+## Choosing the Right File
+
+<Callout>
+  **Most users should start with** `/llms.txt` - it contains all essential
+  information and works with standard LLM context windows. Use `/llms-full.txt`
+  only if you need comprehensive implementation examples and your AI tool
+  supports large contexts (200K+ tokens).
+</Callout>
+
+## Important Usage Notes
+
+<Callout type="warning">
+  **@-symbol must be typed manually** - When using tools like Cursor or
+  Windsurf, the `@` symbol must be typed by hand in the chat interface.
+  Copy-pasting breaks the tool's ability to recognize it as a context reference.
+</Callout>
+
+## Using with AI Tools
+
+### Cursor
+
+1. Open Cursor settings and navigate to the AI section
+2. Add the documentation URL: `https://your-domain.com/llms.txt`
+3. Type `@` followed by the documentation reference in chat
+
+### Windsurf
+
+1. In the chat interface, type `@` manually
+2. Reference the LLMs.txt URL for context
+
+### ChatGPT / Claude
+
+Simply paste the contents of `/llms.txt` or `/llms-full.txt` into your conversation for context about CloakMail.

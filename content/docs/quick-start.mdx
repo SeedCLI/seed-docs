@@ -1,0 +1,207 @@
+---
+title: Quick Start
+description: Build your first CLI tool with Seed CLI in under 5 minutes.
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## Create a CLI in 5 Minutes
+
+<Steps>
+
+<Step>
+### Scaffold a project
+
+```bash
+bun create seedcli my-cli
+cd my-cli
+bun install
+```
+</Step>
+
+<Step>
+### Define a command
+
+```ts title="src/commands/hello.ts"
+import { command, arg, flag } from '@seedcli/core'
+
+export default command({
+  name: 'hello',
+  description: 'Greet someone',
+  args: {
+    name: arg({ type: 'string', required: true, description: 'Name to greet' }),
+  },
+  flags: {
+    color: flag({
+      type: 'string',
+      alias: 'c',
+      description: 'Greeting color',
+      choices: ['red', 'green', 'blue'] as const,
+      default: 'green',
+    }),
+  },
+  run: async (seed) => {
+    // seed.args.name is typed as string
+    // seed.flags.color is typed as 'red' | 'green' | 'blue'
+    const { colors } = seed.print
+    const colorFn = colors[seed.flags.color]
+    seed.print.info(colorFn(`Hello, ${seed.args.name}!`))
+  },
+})
+```
+</Step>
+
+<Step>
+### Set up the entry point
+
+```ts title="src/cli.ts"
+#!/usr/bin/env bun
+import { build } from '@seedcli/core'
+
+const runtime = build('my-cli')
+  .src(import.meta.dir)
+  .version('1.0.0')
+  .help()
+  .debug()
+  .create()
+
+await runtime.run()
+```
+</Step>
+
+<Step>
+### Run it
+
+```bash
+bun src/cli.ts hello World
+# => Hello, World!
+
+bun src/cli.ts hello World --color red
+# => Hello, World! (in red)
+
+bun src/cli.ts --help
+# => Shows help with all commands
+```
+</Step>
+
+</Steps>
+
+## The `run()` Shortcut
+
+For simple CLIs without the builder pattern, use `run()`:
+
+```ts title="src/cli.ts"
+#!/usr/bin/env bun
+import { run, command, arg } from '@seedcli/core'
+
+await run({
+  name: 'my-cli',
+  version: '1.0.0',
+  commands: [
+    command({
+      name: 'greet',
+      args: {
+        name: arg({ type: 'string', required: true }),
+      },
+      run: (seed) => {
+        seed.print.info(`Hello, ${seed.args.name}!`)
+      },
+    }),
+  ],
+})
+```
+
+## Using the Seed Context
+
+Every command receives a `seed` context object with access to all modules:
+
+```ts title="src/commands/init.ts"
+import { command, flag } from '@seedcli/core'
+
+export default command({
+  name: 'init',
+  description: 'Initialize a new project',
+  flags: {
+    template: flag({
+      type: 'string',
+      alias: 't',
+      description: 'Project template',
+      choices: ['basic', 'full'] as const,
+      default: 'basic',
+    }),
+  },
+  run: async (seed) => {
+    // Print module
+    seed.print.info('Initializing project...')
+
+    // Prompt module
+    const name = await seed.prompt.input({ message: 'Project name?' })
+    const useTs = await seed.prompt.confirm({ message: 'Use TypeScript?' })
+
+    // Filesystem module
+    await seed.filesystem.ensureDir(name)
+    await seed.filesystem.writeJson(`${name}/package.json`, {
+      name,
+      version: '0.0.1',
+    })
+
+    // Template module
+    await seed.template.generate({
+      template: 'init',
+      target: name,
+      props: { name, useTs, template: seed.flags.template },
+    })
+
+    // System module
+    const pm = await seed.packageManager.detect()
+    await seed.packageManager.install([], { cwd: name })
+
+    seed.print.success(`Project "${name}" created!`)
+  },
+})
+```
+
+## Subcommands
+
+Nest commands for complex CLIs:
+
+```ts title="src/commands/db.ts"
+import { command } from '@seedcli/core'
+import migrate from './db/migrate'
+import seed from './db/seed'
+import reset from './db/reset'
+
+export default command({
+  name: 'db',
+  description: 'Database operations',
+  subcommands: [migrate, seed, reset],
+})
+```
+
+```bash
+my-cli db migrate --up
+my-cli db seed
+my-cli db reset --force
+```
+
+## Dev Mode
+
+During development, use Bun's watch mode for instant feedback:
+
+```bash
+bun --watch src/cli.ts hello World
+```
+
+<Callout type="info">
+  Changes to any file will automatically restart the CLI.
+</Callout>
+
+## What's Next?
+
+<Cards>
+  <Card title="Commands" href="/concepts/commands" />
+  <Card title="Builder API" href="/concepts/builder" />
+  <Card title="Plugins" href="/concepts/plugins" />
+  <Card title="Print Module" href="/modules/print" />
+</Cards>

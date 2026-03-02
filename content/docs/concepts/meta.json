@@ -1,0 +1,9 @@
+{
+  "pages": [
+    "commands",
+    "builder",
+    "plugins",
+    "extensions",
+    "middleware"
+  ]
+}

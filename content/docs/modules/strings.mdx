@@ -1,0 +1,122 @@
+---
+title: Strings
+description: String manipulation, case conversion, and pluralization.
+---
+
+```bash tab="Install"
+bun add @seedcli/strings
+```
+
+The strings module provides case conversion, pluralization, and common string manipulation utilities.
+
+## Case Conversion
+
+```ts
+seed.strings.camelCase('hello world')      // 'helloWorld'
+seed.strings.pascalCase('hello world')     // 'HelloWorld'
+seed.strings.snakeCase('helloWorld')       // 'hello_world'
+seed.strings.kebabCase('helloWorld')       // 'hello-world'
+seed.strings.constantCase('helloWorld')    // 'HELLO_WORLD'
+seed.strings.titleCase('hello world')      // 'Hello World'
+seed.strings.sentenceCase('helloWorld')    // 'Hello world'
+seed.strings.upperFirst('hello')           // 'Hello'
+seed.strings.lowerFirst('Hello')           // 'hello'
+```
+
+## Pluralization
+
+```ts
+seed.strings.plural('user')       // 'users'
+seed.strings.plural('person')     // 'people'
+seed.strings.plural('category')   // 'categories'
+
+seed.strings.singular('users')    // 'user'
+seed.strings.singular('people')   // 'person'
+seed.strings.singular('categories') // 'category'
+
+seed.strings.isPlural('users')    // true
+seed.strings.isSingular('user')   // true
+```
+
+## String Manipulation
+
+### Truncate
+
+```ts
+seed.strings.truncate('Hello, World!', 8)         // 'Hello...'
+seed.strings.truncate('Hello, World!', 8, ' >>>') // 'Hell >>>'
+```
+
+### Padding
+
+```ts
+seed.strings.pad('hi', 10)           // '    hi    '
+seed.strings.padStart('42', 5, '0')  // '00042'
+seed.strings.padEnd('hi', 10, '.')   // 'hi........'
+```
+
+### Repeat & Reverse
+
+```ts
+seed.strings.repeat('ab', 3)  // 'ababab'
+seed.strings.reverse('hello') // 'olleh'
+```
+
+## Checks
+
+```ts
+seed.strings.isBlank('')          // true
+seed.strings.isBlank('  ')       // true
+seed.strings.isBlank(null)       // true
+seed.strings.isBlank(undefined)  // true
+seed.strings.isBlank('hello')    // false
+
+seed.strings.isNotBlank('hello') // true
+
+seed.strings.isEmpty('')         // true
+seed.strings.isEmpty(null)       // true
+seed.strings.isEmpty('  ')      // false (has whitespace)
+
+seed.strings.isNotEmpty('  ')   // true
+```
+
+## Simple Templating
+
+Replace `{{placeholders}}` in strings:
+
+```ts
+seed.strings.template('Hello, {{name}}! Welcome to {{place}}.', {
+  name: 'Alice',
+  place: 'Wonderland',
+})
+// => 'Hello, Alice! Welcome to Wonderland.'
+```
+
+## API Reference
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `camelCase` | `(str: string) => string` | Convert to camelCase |
+| `pascalCase` | `(str: string) => string` | Convert to PascalCase |
+| `snakeCase` | `(str: string) => string` | Convert to snake_case |
+| `kebabCase` | `(str: string) => string` | Convert to kebab-case |
+| `constantCase` | `(str: string) => string` | Convert to CONSTANT_CASE |
+| `titleCase` | `(str: string) => string` | Convert to Title Case |
+| `sentenceCase` | `(str: string) => string` | Convert to Sentence case |
+| `upperFirst` | `(str: string) => string` | Capitalize first character |
+| `lowerFirst` | `(str: string) => string` | Lowercase first character |
+| `plural` | `(str: string) => string` | Pluralize a word |
+| `singular` | `(str: string) => string` | Singularize a word |
+| `isPlural` | `(str: string) => boolean` | Check if plural |
+| `isSingular` | `(str: string) => boolean` | Check if singular |
+| `truncate` | `(str: string, length: number, suffix?: string) => string` | Truncate with suffix |
+| `pad` | `(str: string, length: number, char?: string) => string` | Center pad |
+| `padStart` | `(str: string, length: number, char?: string) => string` | Left pad |
+| `padEnd` | `(str: string, length: number, char?: string) => string` | Right pad |
+| `repeat` | `(str: string, count: number) => string` | Repeat string |
+| `reverse` | `(str: string) => string` | Reverse string |
+| `isBlank` | `(str: string \| null \| undefined) => boolean` | Check if blank |
+| `isNotBlank` | `(str: string \| null \| undefined) => boolean` | Check if not blank |
+| `isEmpty` | `(str: string \| null \| undefined) => boolean` | Check if empty |
+| `isNotEmpty` | `(str: string \| null \| undefined) => boolean` | Check if not empty |
+| `template` | `(str: string, data: Record<string, string>) => string` | Simple templating |

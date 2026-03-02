@@ -1,0 +1,162 @@
+---
+title: System
+description: Shell commands, system info, and executable discovery.
+---
+
+```bash tab="Install"
+bun add @seedcli/system
+```
+
+The system module provides shell command execution, executable discovery, system information, and environment access.
+
+## Command Execution
+
+### `exec(command, options?)`
+
+Run shell commands and capture output:
+
+```ts
+const result = await seed.system.exec('git status')
+console.log(result.stdout)
+console.log(result.exitCode)
+```
+
+### Exec Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `cwd` | `string` | `process.cwd()` | Working directory |
+| `env` | `Record<string, string>` | — | Environment variables |
+| `stream` | `boolean` | `false` | Stream output to terminal |
+| `stdin` | `string \| Buffer` | — | Input to feed to command |
+| `timeout` | `number` | — | Timeout in milliseconds |
+| `throwOnError` | `boolean` | `false` | Throw on non-zero exit |
+| `shell` | `boolean` | `true` | Run in shell |
+| `trim` | `boolean` | `true` | Trim stdout/stderr whitespace |
+
+### Exec Result
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `stdout` | `string` | Standard output |
+| `stderr` | `string` | Standard error |
+| `exitCode` | `number` | Process exit code |
+
+```ts
+// Stream output in real time
+await seed.system.exec('npm install', { stream: true })
+
+// With environment variables
+const result = await seed.system.exec('echo $MY_VAR', {
+  env: { MY_VAR: 'hello' },
+})
+
+// Throw on failure
+try {
+  await seed.system.exec('make build', { throwOnError: true })
+} catch (error) {
+  // ExecError with stdout, stderr, exitCode
+}
+
+// With timeout
+await seed.system.exec('long-task', { timeout: 30000 })
+```
+
+### `shell`
+
+Direct access to Bun's `$` shell template literal:
+
+```ts
+const { shell } = seed.system
+
+await shell`git add .`
+await shell`git commit -m "feat: initial commit"`
+
+// Pipe commands
+const result = await shell`cat package.json | grep version`
+```
+
+## Executable Discovery
+
+### `which(name)`
+
+Find an executable in PATH (returns `undefined` if not found). This is a **synchronous** function:
+
+```ts
+const dockerPath = seed.system.which('docker')
+if (dockerPath) {
+  seed.print.info(`Docker found at ${dockerPath}`)
+}
+```
+
+### `whichOrThrow(name)`
+
+Same as `which`, but throws `ExecutableNotFoundError` if not found. Also **synchronous**:
+
+```ts
+try {
+  seed.system.whichOrThrow('docker')
+} catch (error) {
+  seed.print.error('Docker is required but not installed')
+}
+```
+
+## System Info
+
+```ts
+seed.system.os()         // 'macos' | 'linux' | 'windows'
+seed.system.arch()       // 'x64' | 'arm64' | 'arm'
+seed.system.platform()   // Node.js platform string
+seed.system.hostname()   // Machine hostname
+seed.system.cpus()       // Number of CPU cores
+seed.system.uptime()     // System uptime in seconds
+
+const mem = seed.system.memory()
+// { total: 17179869184, free: 8589934592 }
+```
+
+## Open
+
+Open a file or URL in the default application:
+
+```ts
+// Open a URL in the browser
+await seed.system.open('https://seedcli.dev')
+
+// Open a file in its default app
+await seed.system.open('report.pdf')
+```
+
+## Environment
+
+```ts
+// Get an env variable
+const token = seed.system.env('API_TOKEN')
+
+// With default value
+const port = seed.system.env('PORT', '3000')
+```
+
+## Interactive Detection
+
+Check if the terminal supports interactive prompts:
+
+```ts
+if (seed.system.isInteractive()) {
+  const name = await seed.prompt.input('Name?')
+} else {
+  // CI or piped — use defaults
+}
+```
+
+## Error Types
+
+```ts
+import { ExecError, ExecutableNotFoundError, ExecTimeoutError } from '@seedcli/system'
+```
+
+| Error | Description |
+|-------|-------------|
+| `ExecError` | Command exited with non-zero code (when `throwOnError: true`) |
+| `ExecutableNotFoundError` | Executable not found (from `whichOrThrow`) |
+| `ExecTimeoutError` | Command exceeded timeout |

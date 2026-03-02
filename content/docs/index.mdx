@@ -1,13 +1,95 @@
 ---
-title: Hello World
-description: Your first document
+title: Introduction
+description: Seed CLI is a batteries-included, modular, TypeScript-first CLI framework powered by Bun.
 ---
 
-Welcome to the docs! You can start writing documents in `/content/docs`.
+import { Callout } from 'fumadocs-ui/components/callout';
 
-## What is Next?
+Seed CLI is a modern, batteries-included CLI framework for building powerful command-line tools with TypeScript and Bun. It provides a modular architecture where every feature is opt-in, fully typed, and designed for developer productivity.
+
+## Why Seed CLI?
+
+- **TypeScript-first** — Full end-to-end type safety from arg parsing to command execution
+- **Bun-powered** — Built for Bun's speed with native APIs where possible
+- **Batteries included** — 15+ modules covering everything from prompts to HTTP clients
+- **Modular** — Import only what you need; every module is a separate package
+- **Plugin system** — Extend your CLI with reusable plugins and extensions
+
+## Quick Look
+
+```ts title="commands/greet.ts"
+import { command, arg, flag } from '@seedcli/core'
+
+export default command({
+  name: 'greet',
+  description: 'Say hello',
+  args: {
+    name: arg({ type: 'string', required: true, description: 'Who to greet' }),
+  },
+  flags: {
+    loud: flag({ type: 'boolean', alias: 'l', description: 'Shout it' }),
+  },
+  run: async (seed) => {
+    const greeting = `Hello, ${seed.args.name}!`
+    if (seed.flags.loud) {
+      seed.print.success(greeting.toUpperCase())
+    } else {
+      seed.print.info(greeting)
+    }
+  },
+})
+```
+
+## Packages
+
+Seed CLI is organized as a monorepo with individual packages you can install as needed:
+
+| Package | Description |
+|---------|-------------|
+| `@seedcli/core` | Runtime, builder, command router, arg parser |
+| `@seedcli/print` | Colored logging, spinner, table, box, figlet, tree, progress |
+| `@seedcli/prompt` | Interactive prompts with type inference |
+| `@seedcli/filesystem` | File operations, path helpers, finding files |
+| `@seedcli/system` | Shell commands, system info, executable discovery |
+| `@seedcli/template` | Eta template engine for code generation |
+| `@seedcli/config` | Config file loading via c12 |
+| `@seedcli/http` | HTTP client + OpenAPI typed client |
+| `@seedcli/package-manager` | Package manager detection and operations |
+| `@seedcli/semver` | Semantic versioning utilities |
+| `@seedcli/strings` | String manipulation and case conversion |
+| `@seedcli/patching` | File modification (patch, append, prepend) |
+| `@seedcli/completions` | Shell completion generation |
+| `@seedcli/ui` | Higher-level UI components |
+| `@seedcli/testing` | CLI testing utilities |
+
+### Umbrella Package
+
+If you want everything in one import, use the umbrella package:
+
+```bash
+bun add @seedcli/seed
+```
+
+```ts
+import { build, command, arg, flag, print, colors, spin } from '@seedcli/seed'
+```
+
+`@seedcli/seed` re-exports all modules with sensible naming. HTTP methods are prefixed (`httpGet`, `httpPost`), package manager functions are prefixed (`detectPackageManager`, `installPackages`), and filesystem functions use direct names (`read`, `write`, `copy`).
+
+<Callout type="info">
+  The umbrella package is convenient for getting started. For production CLIs, import from individual packages to minimize bundle size.
+</Callout>
+
+## Requirements
+
+- **Bun** 1.3 or later
+- **TypeScript** 5.0+
+
+## Next Steps
 
 <Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
+  <Card title="Installation" href="/installation" />
+  <Card title="Quick Start" href="/quick-start" />
+  <Card title="Builder API" href="/concepts/builder" />
+  <Card title="Commands" href="/concepts/commands" />
 </Cards>

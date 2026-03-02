@@ -1,0 +1,240 @@
+---
+title: Commands
+description: Define commands with fully typed arguments, flags, and subcommands.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Commands are the core building block of any Seed CLI application. Each command defines its name, arguments, flags, and a `run` function that receives the fully typed `seed` context.
+
+## Defining a Command
+
+```ts
+import { command, arg, flag } from '@seedcli/core'
+
+export default command({
+  name: 'deploy',
+  description: 'Deploy the application',
+  alias: ['d'],
+  args: {
+    environment: arg({
+      type: 'string',
+      required: true,
+      description: 'Target environment',
+      choices: ['staging', 'production'] as const,
+    }),
+  },
+  flags: {
+    force: flag({ type: 'boolean', alias: 'f', description: 'Skip confirmation' }),
+    tag: flag({ type: 'string', description: 'Deploy tag' }),
+  },
+  run: async (seed) => {
+    // seed.args.environment is typed as 'staging' | 'production'
+    // seed.flags.force is typed as boolean | undefined
+    // seed.flags.tag is typed as string | undefined
+  },
+})
+```
+
+## Arguments
+
+Arguments are positional values passed after the command name.
+
+### `arg()` Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `type` | `'string' \| 'number'` | The argument type |
+| `required` | `boolean` | Whether the argument is required (default: `false`) |
+| `description` | `string` | Help text description |
+| `default` | `string \| number` | Default value if not provided |
+| `choices` | `readonly string[]` | Restrict to specific values |
+| `validate` | `(value) => boolean \| string` | Custom validation function |
+
+### Type Inference with Choices
+
+When you use `choices` with `as const`, the argument type narrows to a union:
+
+```ts
+const env = arg({
+  type: 'string',
+  choices: ['dev', 'staging', 'prod'] as const,
+})
+// seed.args.env is typed as 'dev' | 'staging' | 'prod'
+```
+
+### Validation
+
+```ts
+const port = arg({
+  type: 'number',
+  validate: (value) => {
+    if (value < 1 || value > 65535) return 'Port must be between 1 and 65535'
+    return true
+  },
+})
+```
+
+## Flags
+
+Flags are named options prefixed with `--` (or `-` for aliases).
+
+### `flag()` Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `type` | `'boolean' \| 'string' \| 'number' \| 'string[]' \| 'number[]'` | The flag type |
+| `alias` | `string` | Short alias (e.g., `'f'` for `--force`) |
+| `required` | `boolean` | Whether the flag is required |
+| `default` | `unknown` | Default value |
+| `description` | `string` | Help text |
+| `choices` | `readonly string[]` | Restrict to specific values |
+| `validate` | `(value) => boolean \| string` | Custom validation |
+| `hidden` | `boolean` | Hide from help output |
+
+### Flag Types
+
+```ts
+// Boolean — presence toggles to true
+flag({ type: 'boolean' })
+// Usage: --verbose
+
+// String
+flag({ type: 'string', default: 'json' })
+// Usage: --format json
+
+// Number
+flag({ type: 'number' })
+// Usage: --port 3000
+
+// String array — can be repeated
+flag({ type: 'string[]' })
+// Usage: --tag v1 --tag v2
+
+// Number array
+flag({ type: 'number[]' })
+// Usage: --port 3000 --port 3001
+```
+
+### Choices with Type Narrowing
+
+```ts
+const format = flag({
+  type: 'string',
+  choices: ['json', 'yaml', 'toml'] as const,
+})
+// seed.flags.format is typed as 'json' | 'yaml' | 'toml' | undefined
+```
+
+## Command Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `name` | `string` | Command name (required) |
+| `description` | `string` | Help text |
+| `alias` | `string[]` | Command aliases |
+| `hidden` | `boolean` | Hide from help output |
+| `args` | `Record<string, ArgDef>` | Positional arguments |
+| `flags` | `Record<string, FlagDef>` | Named flags |
+| `subcommands` | `Command[]` | Nested subcommands |
+| `middleware` | `Middleware[]` | Command-specific middleware |
+| `run` | `(seed: Seed) => void \| Promise<void>` | Command handler |
+
+## Subcommands
+
+Commands can have nested subcommands:
+
+```ts
+import { command } from '@seedcli/core'
+
+const migrate = command({
+  name: 'migrate',
+  description: 'Run database migrations',
+  flags: {
+    up: flag({ type: 'boolean', description: 'Migrate up' }),
+    down: flag({ type: 'boolean', description: 'Migrate down' }),
+  },
+  run: async (seed) => { /* ... */ },
+})
+
+const dbSeed = command({
+  name: 'seed',
+  description: 'Seed the database',
+  run: async (seed) => { /* ... */ },
+})
+
+export default command({
+  name: 'db',
+  description: 'Database operations',
+  subcommands: [migrate, dbSeed],
+})
+```
+
+```bash
+my-cli db migrate --up
+my-cli db seed
+```
+
+## The Seed Context
+
+Every command's `run` function receives a `seed` object with:
+
+```ts
+interface Seed<TArgs, TFlags> {
+  args: TArgs                    // Typed arguments
+  flags: TFlags                  // Typed flags
+  parameters: {
+    raw: string[]                // Original argv
+    argv: string[]               // Positional arguments after parsing
+    command: string | undefined  // Matched command name
+  }
+
+  // Modules (lazily loaded)
+  print: PrintModule
+  prompt: PromptModule
+  filesystem: FilesystemModule
+  system: SystemModule
+  http: HttpModule
+  template: TemplateModule
+  patching: PatchingModule
+  strings: StringsModule
+  semver: SemverModule
+  packageManager: PackageManagerModule
+  config: ConfigModule
+
+  // Metadata
+  meta: {
+    version: string
+    commandName: string
+    brand: string
+    debug: boolean
+  }
+}
+```
+
+<Callout type="info">
+  Modules are loaded lazily — they're only initialized when first accessed, keeping startup fast.
+</Callout>
+
+## Auto-Discovery
+
+Place commands in a `commands/` directory and use `.src()` to auto-discover them:
+
+```
+src/
+├── commands/
+│   ├── deploy.ts    → my-cli deploy
+│   ├── init.ts      → my-cli init
+│   └── db/
+│       ├── migrate.ts → my-cli db migrate
+│       └── seed.ts    → my-cli db seed
+└── cli.ts
+```
+
+```ts title="src/cli.ts"
+const runtime = build('my-cli')
+  .src(import.meta.dir)
+  .create()
+```
+
+Each command file should `export default` a `command()` call. Subdirectories automatically become nested subcommands.

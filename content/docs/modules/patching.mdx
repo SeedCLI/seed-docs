@@ -1,0 +1,166 @@
+---
+title: Patching
+description: Modify existing files with surgical precision.
+---
+
+```bash tab="Install"
+bun add @seedcli/patching
+```
+
+The patching module lets you modify existing files by inserting, replacing, or deleting content at specific locations — ideal for code generation that needs to integrate with existing code.
+
+## Patch a File
+
+```ts
+const result = await seed.patching.patch('src/app.ts', {
+  insert: "import { logger } from './logger'\n",
+  before: "import { router }",
+})
+
+console.log(result.changed)  // true
+```
+
+### Patch Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `insert` | `string` | Content to insert (used with `before`, `after`, or `replace`) |
+| `before` | `string \| RegExp` | Insert before this pattern |
+| `after` | `string \| RegExp` | Insert after this pattern |
+| `replace` | `string \| RegExp` | Pattern to replace (use with `insert` to provide replacement) |
+| `delete` | `string \| RegExp` | Pattern to delete |
+
+### Patch Result
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `changed` | `boolean` | Whether the file was modified |
+| `content` | `string` | The new file content |
+
+### Examples
+
+**Insert before a pattern:**
+
+```ts
+await seed.patching.patch('src/routes.ts', {
+  insert: "  app.use('/api/users', usersRouter)\n",
+  before: '// END ROUTES',
+})
+```
+
+**Insert after a pattern:**
+
+```ts
+await seed.patching.patch('src/index.ts', {
+  insert: "import { analytics } from './analytics'\n",
+  after: "import { app } from './app'\n",
+})
+```
+
+**Replace content:**
+
+```ts
+await seed.patching.patch('config.json', {
+  replace: /"version": "\d+\.\d+\.\d+"/,
+  insert: '"version": "2.0.0"',
+})
+```
+
+**Delete content:**
+
+```ts
+await seed.patching.patch('src/app.ts', {
+  delete: /import { oldModule } from '\.\/old-module'\n/,
+})
+```
+
+## Append & Prepend
+
+```ts
+// Add content to the end of a file
+await seed.patching.append('src/styles.css', '\n.new-class { color: red; }\n')
+
+// Add content to the beginning of a file
+await seed.patching.prepend('src/app.ts', '// Generated file — do not edit\n')
+```
+
+## Check for Pattern
+
+Test if a file contains a pattern:
+
+```ts
+const hasImport = await seed.patching.exists(
+  'src/app.ts',
+  "import { logger } from './logger'"
+)
+
+const hasRoute = await seed.patching.exists(
+  'src/routes.ts',
+  /app\.use\(['"]\/api\/users['"]/
+)
+
+if (!hasRoute) {
+  await seed.patching.patch('src/routes.ts', {
+    insert: "  app.use('/api/users', usersRouter)\n",
+    before: '// END ROUTES',
+  })
+}
+```
+
+## Patch JSON
+
+Modify JSON files with a mutation function:
+
+```ts
+await seed.patching.patchJson('package.json', (data) => {
+  data.scripts ??= {}
+  data.scripts.lint = 'biome check'
+  data.scripts.format = 'biome format --write'
+  return data
+})
+
+// Typed
+interface PkgJson {
+  name: string
+  dependencies: Record<string, string>
+}
+
+await seed.patching.patchJson<PkgJson>('package.json', (data) => {
+  data.dependencies['new-dep'] = '^1.0.0'
+  return data
+})
+```
+
+## Common Patterns
+
+### Adding a route to an Express/Hono app
+
+```ts
+const routeExists = await seed.patching.exists(
+  'src/routes.ts',
+  `app.use('/api/${name}'`
+)
+
+if (!routeExists) {
+  // Add import
+  await seed.patching.patch('src/routes.ts', {
+    insert: `import { ${name}Router } from './routes/${name}'\n`,
+    after: /import .* from '\.\/routes\/.*'\n/,
+  })
+
+  // Add route
+  await seed.patching.patch('src/routes.ts', {
+    insert: `  app.use('/api/${name}', ${name}Router)\n`,
+    before: '// END ROUTES',
+  })
+}
+```
+
+### Adding an export to a barrel file
+
+```ts
+await seed.patching.append(
+  'src/index.ts',
+  `export { ${name} } from './${name}'\n`
+)
+```

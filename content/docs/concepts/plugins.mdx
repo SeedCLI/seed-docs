@@ -1,0 +1,208 @@
+---
+title: Plugins
+description: Extend your CLI with reusable, distributable plugins.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Plugins let you package commands, extensions, templates, and configuration into reusable, distributable npm packages. They're the primary mechanism for sharing functionality across CLI projects.
+
+## Defining a Plugin
+
+```ts title="seedcli-plugin-docker/src/index.ts"
+import { definePlugin, command, flag } from '@seedcli/core'
+
+export default definePlugin({
+  name: 'docker',
+  description: 'Docker integration for Seed CLI',
+  version: '1.0.0',
+  seedcli: '>=1.0.0',  // Required Seed CLI version
+
+  commands: [
+    command({
+      name: 'docker:build',
+      description: 'Build a Docker image',
+      flags: {
+        tag: flag({ type: 'string', alias: 't', description: 'Image tag' }),
+        push: flag({ type: 'boolean', description: 'Push after build' }),
+      },
+      run: async (seed) => {
+        const tag = seed.flags.tag ?? 'latest'
+        await seed.system.exec(`docker build -t ${tag} .`)
+        if (seed.flags.push) {
+          await seed.system.exec(`docker push ${tag}`)
+        }
+        seed.print.success(`Built image: ${tag}`)
+      },
+    }),
+  ],
+
+  extensions: [
+    {
+      name: 'docker-check',
+      setup: async (seed) => {
+        await seed.system.whichOrThrow('docker')
+      },
+    },
+  ],
+
+  templates: './templates',
+
+  defaults: {
+    registry: 'docker.io',
+    dockerfile: 'Dockerfile',
+  },
+})
+```
+
+## Plugin Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `name` | `string` | Plugin identifier (required) |
+| `description` | `string` | Human-readable description |
+| `version` | `string` | Plugin version (required) |
+| `seedcli` | `string` | Required Seed CLI semver range |
+| `peerPlugins` | `Record<string, string>` | Required peer plugin versions |
+| `commands` | `Command[]` | Commands to register |
+| `extensions` | `ExtensionConfig[]` | Extensions to register |
+| `templates` | `string` | Path to template directory |
+| `defaults` | `Record<string, unknown>` | Default configuration values |
+
+## Loading Plugins
+
+### By Name
+
+```ts
+const runtime = build('my-cli')
+  .plugin('seedcli-plugin-docker')
+  .create()
+```
+
+Resolves from `node_modules`. The package must export a plugin as its default export.
+
+### Multiple Plugins
+
+```ts
+build('my-cli')
+  .plugin(['seedcli-plugin-docker', 'seedcli-plugin-aws'])
+```
+
+### From Directory
+
+```ts
+build('my-cli')
+  .plugins('./plugins')
+```
+
+Discovers all plugin files in the directory.
+
+## Peer Plugin Dependencies
+
+Plugins can declare dependencies on other plugins:
+
+```ts
+definePlugin({
+  name: 'deploy',
+  version: '1.0.0',
+  peerPlugins: {
+    docker: '>=1.0.0',
+    aws: '>=2.0.0',
+  },
+  // ...
+})
+```
+
+If a required peer plugin is missing or the version doesn't match, a `PluginValidationError` is thrown at startup.
+
+## Version Constraints
+
+The `seedcli` field constrains which versions of Seed CLI the plugin supports:
+
+```ts
+definePlugin({
+  name: 'my-plugin',
+  version: '1.0.0',
+  seedcli: '>=1.0.0 <2.0.0',
+  // ...
+})
+```
+
+## Plugin Templates
+
+Plugins can provide templates that are accessible via the template module:
+
+```ts
+definePlugin({
+  name: 'react',
+  version: '1.0.0',
+  templates: './templates',
+  commands: [
+    command({
+      name: 'generate:component',
+      args: { name: arg({ type: 'string', required: true }) },
+      run: async (seed) => {
+        await seed.template.generate({
+          template: 'component',  // Resolved from plugin's template dir
+          target: `src/components/${seed.args.name}`,
+          props: { name: seed.args.name },
+        })
+      },
+    }),
+  ],
+})
+```
+
+## Plugin Defaults
+
+Default configuration values that can be overridden by the user's config file:
+
+```ts
+definePlugin({
+  name: 'deploy',
+  version: '1.0.0',
+  defaults: {
+    region: 'us-east-1',
+    timeout: 300,
+  },
+})
+```
+
+Users can override in their config:
+
+```ts title="myapp.config.ts"
+import { defineConfig } from '@seedcli/core'
+
+export default defineConfig({
+  plugins: {
+    deploy: {
+      region: 'eu-west-1',
+    },
+  },
+})
+```
+
+## Publishing a Plugin
+
+Plugins are standard npm packages. Follow these conventions:
+
+1. Name your package `seedcli-plugin-<name>`
+2. Export the plugin as the default export
+3. Specify `seedcli` version range
+4. Include `"seedcli-plugin"` keyword in `package.json`
+
+```json title="package.json"
+{
+  "name": "seedcli-plugin-docker",
+  "version": "1.0.0",
+  "keywords": ["seedcli-plugin"],
+  "main": "dist/index.js",
+  "peerDependencies": {
+    "@seedcli/core": ">=1.0.0"
+  }
+}
+```
+
+<Callout type="info">
+  Declare `@seedcli/core` as a peer dependency, not a regular dependency, to avoid version conflicts.
+</Callout>

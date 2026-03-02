@@ -1,0 +1,204 @@
+---
+title: HTTP
+description: HTTP client with retry support and OpenAPI typed client.
+---
+
+```bash tab="Install"
+bun add @seedcli/http
+```
+
+The HTTP module provides a simple fetch-based HTTP client and an OpenAPI-typed client via `openapi-fetch`.
+
+## Simple Requests
+
+```ts
+// GET
+const { data, status } = await seed.http.get<User>('https://api.example.com/users/1')
+
+// POST
+const { data } = await seed.http.post<User>('https://api.example.com/users', {
+  name: 'Alice',
+  email: 'alice@example.com',
+})
+
+// PUT
+await seed.http.put('https://api.example.com/users/1', { name: 'Alice Updated' })
+
+// PATCH
+await seed.http.patch('https://api.example.com/users/1', { name: 'Alice' })
+
+// DELETE
+await seed.http.delete('https://api.example.com/users/1')
+
+// HEAD
+const { headers } = await seed.http.head('https://api.example.com/health')
+```
+
+### Request Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `headers` | `Record<string, string>` | Request headers |
+| `params` | `Record<string, string \| number>` | URL query parameters |
+| `timeout` | `number` | Timeout in milliseconds |
+| `retry` | `number \| RetryConfig` | Retry configuration |
+| `signal` | `AbortSignal` | Abort signal |
+
+```ts
+const { data } = await seed.http.get<SearchResult>('https://api.example.com/search', {
+  params: { q: 'seed cli', page: 1 },
+  headers: { Authorization: 'Bearer token123' },
+  timeout: 5000,
+  retry: 3,
+})
+```
+
+### Response
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `data` | `T` | Parsed response body |
+| `status` | `number` | HTTP status code |
+| `statusText` | `string` | Status text |
+| `headers` | `Headers` | Response headers |
+| `ok` | `boolean` | `true` if status is 2xx |
+| `raw` | `Response` | Original fetch Response |
+
+## Retry Configuration
+
+```ts
+await seed.http.get('https://api.example.com/data', {
+  retry: {
+    count: 3,
+    delay: 1000,
+    backoff: 'exponential',  // 1s, 2s, 4s
+    retryOn: [503, 429],     // Only retry these status codes
+  },
+})
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `count` | `number` | — | Number of retries |
+| `delay` | `number` | `1000` | Initial delay in ms |
+| `backoff` | `'linear' \| 'exponential'` | `'linear'` | Backoff strategy |
+| `retryOn` | `number[]` | `[408, 429, 500, 502, 503, 504]` | Status codes to retry |
+| `onRetry` | `(error: Error, attempt: number) => void` | — | Callback on each retry |
+
+## HTTP Client Factory
+
+Create a preconfigured client for an API:
+
+```ts
+const api = seed.http.create({
+  baseURL: 'https://api.example.com',
+  headers: {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000,
+  retry: 2,
+})
+
+// All requests use the base config
+const { data: users } = await api.get<User[]>('/users')
+const { data: user } = await api.post<User>('/users', { name: 'Alice' })
+```
+
+### Client Config
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `baseURL` | `string` | Base URL for all requests |
+| `headers` | `Record<string, string>` | Default headers |
+| `timeout` | `number` | Default timeout |
+| `retry` | `number \| RetryConfig` | Default retry config |
+| `interceptors` | `object` | Request/response interceptors |
+
+### Interceptors
+
+```ts
+const api = seed.http.create({
+  baseURL: 'https://api.example.com',
+  interceptors: {
+    request: async (url, init) => {
+      // Add timestamp to every request
+      init.headers = { ...init.headers, 'X-Request-Time': Date.now().toString() }
+      return init
+    },
+    response: async (response) => {
+      // Log all responses
+      seed.print.debug(`${response.status} ${response.statusText}`)
+      return response
+    },
+  },
+})
+```
+
+## File Download
+
+Download files with progress tracking:
+
+```ts
+await seed.http.download('https://example.com/archive.zip', './downloads/archive.zip', {
+  onProgress: (progress) => {
+    console.log(`${progress.percent}% - ${progress.speed} bytes/s`)
+  },
+})
+```
+
+### Download Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `headers` | `Record<string, string>` | Request headers |
+| `onProgress` | `(progress) => void` | Progress callback |
+| `signal` | `AbortSignal` | Abort signal |
+
+### Download Progress
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `percent` | `number` | Percentage complete (0-100) |
+| `transferred` | `number` | Bytes transferred |
+| `total` | `number \| null` | Total bytes (null if unknown) |
+| `speed` | `number` | Bytes per second |
+
+## OpenAPI Typed Client
+
+For APIs with an OpenAPI schema, get full type safety:
+
+```ts
+import type { paths } from './api-schema'  // Generated from OpenAPI spec
+
+const api = seed.http.createOpenAPIClient<paths>({
+  baseUrl: 'https://api.example.com',
+  headers: { Authorization: `Bearer ${token}` },
+})
+
+// Fully typed request and response
+const { data, error } = await api.GET('/users/{id}', {
+  params: { path: { id: '123' } },
+})
+
+const { data } = await api.POST('/users', {
+  body: { name: 'Alice', email: 'alice@example.com' },
+})
+```
+
+Generate types from an OpenAPI spec using `openapi-typescript`:
+
+```bash
+bunx openapi-typescript https://api.example.com/openapi.json -o src/api-schema.ts
+```
+
+## Error Types
+
+```ts
+import { HttpError, HttpTimeoutError } from '@seedcli/http'
+```
+
+| Error | Description |
+|-------|-------------|
+| `HttpError` | Non-2xx response (includes `status`, `statusText`, `data`) |
+| `HttpTimeoutError` | Request exceeded timeout |

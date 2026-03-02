@@ -1,0 +1,144 @@
+---
+title: UI
+description: Higher-level UI components for rich CLI output.
+---
+
+```bash tab="Install"
+bun add @seedcli/ui
+```
+
+The UI module provides higher-level, composed UI components that build on top of the print module. Use it for polished, consistent CLI output.
+
+## Header
+
+Display a styled header:
+
+```ts
+seed.ui.header('My CLI', {
+  subtitle: 'v1.0.0',
+  color: 'green',
+})
+```
+
+Output:
+```
+╔═══════════════════╗
+║      My CLI       ║
+║      v1.0.0       ║
+╚═══════════════════╝
+```
+
+### Header Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `subtitle` | `string` | Text below the title |
+| `color` | `string` | Border and title color |
+
+## Status
+
+Show the result of an operation:
+
+```ts
+seed.ui.status('Database migration', 'success')
+seed.ui.status('Cache invalidation', 'fail')
+seed.ui.status('CDN purge', 'skip')
+seed.ui.status('DNS propagation', 'pending')
+```
+
+Output:
+```
+✔ Database migration
+✖ Cache invalidation
+○ CDN purge
+◌ DNS propagation
+```
+
+### Status States
+
+| State | Symbol | Description |
+|-------|--------|-------------|
+| `'success'` | `✔` | Completed successfully |
+| `'fail'` | `✖` | Failed |
+| `'skip'` | `○` | Skipped |
+| `'pending'` | `◌` | Not yet started |
+
+## List
+
+Display a formatted list:
+
+```ts
+// Bullet list (default)
+seed.ui.list(['Install dependencies', 'Run migrations', 'Start server'])
+
+// Numbered list
+seed.ui.list(['First step', 'Second step', 'Third step'], {
+  ordered: true,
+})
+
+// Custom marker
+seed.ui.list(['Feature A', 'Feature B'], {
+  marker: 'arrow',
+})
+```
+
+### List Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ordered` | `boolean` | `false` | Use numbers instead of bullets |
+| `marker` | `'bullet' \| 'arrow' \| 'dash' \| 'number'` | `'bullet'` | Marker style |
+
+## Countdown
+
+Display a countdown timer:
+
+```ts
+await seed.ui.countdown(5, 'Deploying in')
+// Deploying in 5...
+// Deploying in 4...
+// Deploying in 3...
+// Deploying in 2...
+// Deploying in 1...
+```
+
+The countdown updates in-place and resolves when it reaches zero.
+
+## Re-exported Components
+
+The UI module also re-exports these components from the print module for convenience:
+
+```ts
+// These are the same as seed.print.* equivalents
+seed.ui.divider({ title: 'Section' })
+seed.ui.keyValue({ Name: 'app', Version: '1.0.0' })
+seed.ui.tree({ label: 'root', children: [...] })
+```
+
+## Example: Deployment Summary
+
+```ts
+seed.ui.header('Deployment', { subtitle: 'Production', color: 'cyan' })
+seed.print.newline()
+
+seed.print.keyValue({
+  Environment: 'production',
+  Region: 'us-east-1',
+  Version: '2.1.0',
+  Commit: 'abc123f',
+})
+seed.print.newline()
+
+seed.print.divider('Steps')
+seed.ui.status('Build', 'success')
+seed.ui.status('Test', 'success')
+seed.ui.status('Deploy', 'success')
+seed.ui.status('Health check', 'pending')
+seed.print.newline()
+
+seed.print.box('Deployment complete!', {
+  borderColor: 'green',
+  borderStyle: 'round',
+  padding: 1,
+})
+```

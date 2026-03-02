@@ -1,0 +1,156 @@
+---
+title: create-seedcli
+description: Scaffold a new Seed CLI project with bun create.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+`create-seedcli` is a standalone scaffolding package that works with `bun create` for instant project setup.
+
+## Usage
+
+```bash
+bun create seedcli my-cli
+```
+
+This is equivalent to running `seed new my-cli` but doesn't require the `@seedcli/cli` package to be installed globally.
+
+## Interactive Mode
+
+When run without a name, it prompts for one:
+
+```bash
+bun create seedcli
+```
+
+You'll be prompted for:
+
+1. **Project name** — Directory name and package name (kebab-cased)
+2. **Template** — Full (recommended), Minimal, or Plugin
+3. **Description** — Package description
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--yes, -y` | Skip all prompts, use defaults |
+| `--no-install` | Skip dependency installation |
+| `--no-git` | Skip git initialization |
+
+## Templates
+
+<Tabs items={['Full', 'Minimal', 'Plugin']}>
+  <Tab value="Full">
+
+The recommended template with example commands, extensions, and testing:
+
+```
+my-cli/
+├── src/
+│   ├── commands/
+│   │   └── hello.ts          # Example command with args & flags
+│   ├── extensions/
+│   │   └── timer.ts          # Example extension
+│   └── index.ts              # Entry point (auto-discovers commands/ & extensions/)
+├── tests/
+│   └── hello.test.ts
+├── biome.json
+├── bunfig.toml
+├── package.json
+├── seed.config.ts             # CLI configuration
+└── tsconfig.json
+```
+
+  </Tab>
+  <Tab value="Minimal">
+
+A bare-bones single-file CLI:
+
+```
+my-cli/
+├── src/
+│   └── index.ts              # Entry point with inline command
+├── tests/
+│   └── index.test.ts
+├── biome.json
+├── bunfig.toml
+├── package.json
+└── tsconfig.json
+```
+
+  </Tab>
+  <Tab value="Plugin">
+
+A reusable plugin package for npm distribution:
+
+```
+my-plugin/
+├── src/
+│   ├── commands/
+│   │   └── hello.ts          # Example command
+│   ├── extensions/
+│   │   └── example.ts        # Example extension
+│   ├── types.d.ts            # Module augmentation for SeedExtensions
+│   └── index.ts              # definePlugin() export
+├── tests/
+│   └── plugin.test.ts        # Uses createTestCli()
+├── biome.json
+├── bunfig.toml
+├── package.json              # No bin field, has peerDependencies & publishConfig
+├── tsconfig.json
+└── tsconfig.build.json       # For publishing compiled dist/
+```
+
+  </Tab>
+</Tabs>
+
+## Template Comparison
+
+| Aspect | Full | Minimal | Plugin |
+|--------|------|---------|--------|
+| **Purpose** | Production CLI | Quick scripts | Reusable npm package |
+| **Entry** | Auto-discovers `commands/` & `extensions/` | Inline command | `definePlugin()` export |
+| **Example command** | `hello` with args & flags | `hello` (simple) | `hello` |
+| **Extensions** | `timer` example | None | `example` extension |
+| **Config** | `seed.config.ts` | None | None |
+| **bin field** | Yes | Yes | No |
+| **Tests** | Bun.spawn() | Bun.spawn() | `createTestCli()` |
+| **Build** | `seed build` | `seed build` | `tsc` → `dist/` |
+
+## Examples
+
+```bash
+# Quick start with defaults (Full template)
+bun create seedcli my-cli --yes
+
+# Minimal template, no prompts
+bun create seedcli my-cli --yes  # then select Minimal
+
+# Skip dependency installation
+bun create seedcli my-cli --no-install
+
+# Skip git initialization
+bun create seedcli my-cli --no-git
+```
+
+## After Scaffolding
+
+**For Full / Minimal templates:**
+
+```bash
+cd my-cli
+bun run dev                    # Start with watch mode
+bun run src/index.ts --help    # Run directly
+bun link                       # Use as global command
+```
+
+**For Plugin template:**
+
+```bash
+cd my-plugin
+bun test                       # Run tests
+
+# Use in a CLI:
+# import plugin from "my-plugin"
+# build("my-cli").plugin(plugin).create()
+```

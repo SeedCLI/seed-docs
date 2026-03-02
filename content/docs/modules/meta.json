@@ -1,0 +1,18 @@
+{
+  "pages": [
+    "print",
+    "prompt",
+    "filesystem",
+    "system",
+    "template",
+    "config",
+    "http",
+    "package-manager",
+    "semver",
+    "strings",
+    "patching",
+    "completions",
+    "ui",
+    "testing"
+  ]
+}
