@@ -506,7 +506,7 @@ var hasRequiredReactDom_production;
 function requireReactDom_production() {
   if (hasRequiredReactDom_production) return reactDom_production;
   hasRequiredReactDom_production = 1;
-  var React3 = requireReact();
+  var React2 = requireReact();
   function formatProdErrorMessage(code) {
     var url = "https://react.dev/errors/" + code;
     if (1 < arguments.length) {
@@ -545,7 +545,7 @@ function requireReactDom_production() {
       implementation
     };
   }
-  var ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  var ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
   function getCrossOriginStringAs(as, input) {
     if ("font" === as) return "";
     if ("string" === typeof input)
@@ -2317,32 +2317,40 @@ function createFromReadableStream(stream, options = {}) {
 }
 const clientReferences = {
   "f5d2887272df": async () => {
-    const m = await import("./assets/worker-entry-CnPbAXF_.js").then((n) => n.w);
+    const m = await import("./assets/worker-entry-BBknJ_Jh.js").then((n) => n.w);
     return m.export_f5d2887272df;
   },
   "3c56a20d82f7": async () => {
-    const m = await import("./assets/worker-entry-CnPbAXF_.js").then((n) => n.w);
+    const m = await import("./assets/worker-entry-BBknJ_Jh.js").then((n) => n.w);
     return m.export_3c56a20d82f7;
   },
   "dd935e2b426a": async () => {
-    const m = await import("./assets/worker-entry-CnPbAXF_.js").then((n) => n.w);
+    const m = await import("./assets/worker-entry-BBknJ_Jh.js").then((n) => n.w);
     return m.export_dd935e2b426a;
   },
   "becc1a081aff": async () => {
-    const m = await import("./assets/worker-entry-CnPbAXF_.js").then((n) => n.w);
+    const m = await import("./assets/worker-entry-BBknJ_Jh.js").then((n) => n.w);
     return m.export_becc1a081aff;
   },
   "0817f5b3b49f": async () => {
-    const m = await import("./assets/worker-entry-CnPbAXF_.js").then((n) => n.w);
+    const m = await import("./assets/worker-entry-BBknJ_Jh.js").then((n) => n.w);
     return m.export_0817f5b3b49f;
   },
   "327bb606fa81": async () => {
-    const m = await import("./assets/worker-entry-CnPbAXF_.js").then((n) => n.w);
+    const m = await import("./assets/worker-entry-BBknJ_Jh.js").then((n) => n.w);
     return m.export_327bb606fa81;
   },
   "95bdd8cb34e3": async () => {
-    const m = await import("./assets/worker-entry-CnPbAXF_.js").then((n) => n.w);
+    const m = await import("./assets/worker-entry-BBknJ_Jh.js").then((n) => n.w);
     return m.export_95bdd8cb34e3;
+  },
+  "f29e6e234fea": async () => {
+    const m = await import("./assets/worker-entry-BBknJ_Jh.js").then((n) => n.w);
+    return m.export_f29e6e234fea;
+  },
+  "0deffcb8ffd7": async () => {
+    const m = await import("./assets/worker-entry-BBknJ_Jh.js").then((n) => n.w);
+    return m.export_0deffcb8ffd7;
   }
 };
 var reactDomExports = requireReactDom();
@@ -2388,7 +2396,7 @@ function requireReactDomServer_edge_production() {
   hasRequiredReactDomServer_edge_production = 1;
   const __viteRscAsyncHooks = require$$0;
   globalThis.AsyncLocalStorage = __viteRscAsyncHooks.AsyncLocalStorage;
-  var React3 = requireReact(), ReactDOM2 = requireReactDom(), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy"), REACT_SCOPE_TYPE = /* @__PURE__ */ Symbol.for("react.scope"), REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity"), REACT_LEGACY_HIDDEN_TYPE = /* @__PURE__ */ Symbol.for("react.legacy_hidden"), REACT_MEMO_CACHE_SENTINEL = /* @__PURE__ */ Symbol.for("react.memo_cache_sentinel"), REACT_VIEW_TRANSITION_TYPE = /* @__PURE__ */ Symbol.for("react.view_transition"), MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+  var React2 = requireReact(), ReactDOM2 = requireReactDom(), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy"), REACT_SCOPE_TYPE = /* @__PURE__ */ Symbol.for("react.scope"), REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity"), REACT_LEGACY_HIDDEN_TYPE = /* @__PURE__ */ Symbol.for("react.legacy_hidden"), REACT_MEMO_CACHE_SENTINEL = /* @__PURE__ */ Symbol.for("react.memo_cache_sentinel"), REACT_VIEW_TRANSITION_TYPE = /* @__PURE__ */ Symbol.for("react.view_transition"), MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
   function getIteratorFn(maybeIterable) {
     if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
     maybeIterable = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable["@@iterator"];
@@ -2602,7 +2610,7 @@ function requireReactDomServer_edge_production() {
   function sanitizeURL(url) {
     return isJavaScriptProtocol.test("" + url) ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')" : url;
   }
-  var ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM2.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, sharedNotPendingObject = {
+  var ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM2.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, sharedNotPendingObject = {
     pending: false,
     data: null,
     method: null,
@@ -3172,7 +3180,7 @@ function requireReactDomServer_edge_production() {
   }
   function flattenOptionChildren(children) {
     var content = "";
-    React3.Children.forEach(children, function(child) {
+    React2.Children.forEach(children, function(child) {
       null != child && (content += child);
     });
     return content;
@@ -7624,7 +7632,7 @@ performance.now();setTimeout(w,2300>q&&2E3<q?2300-q:500)})])},types:[]});z.ready
     };
   }
   function ensureCorrectIsomorphicReactVersion() {
-    var isomorphicReactPackageVersion = React3.version;
+    var isomorphicReactPackageVersion = React2.version;
     if ("19.2.4" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' + (isomorphicReactPackageVersion + "\n  - react-dom:  19.2.4\nLearn more: https://react.dev/warnings/version-mismatch")
@@ -7879,7 +7887,7 @@ var hasRequiredReactDomServerLegacy_browser_production;
 function requireReactDomServerLegacy_browser_production() {
   if (hasRequiredReactDomServerLegacy_browser_production) return reactDomServerLegacy_browser_production;
   hasRequiredReactDomServerLegacy_browser_production = 1;
-  var React3 = requireReact(), ReactDOM2 = requireReactDom();
+  var React2 = requireReact(), ReactDOM2 = requireReactDom();
   function formatProdErrorMessage(code) {
     var url = "https://react.dev/errors/" + code;
     if (1 < arguments.length) {
@@ -8062,7 +8070,7 @@ function requireReactDomServerLegacy_browser_production() {
   function sanitizeURL(url) {
     return isJavaScriptProtocol.test("" + url) ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')" : url;
   }
-  var ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM2.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, sharedNotPendingObject = {
+  var ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM2.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, sharedNotPendingObject = {
     pending: false,
     data: null,
     method: null,
@@ -8407,7 +8415,7 @@ function requireReactDomServerLegacy_browser_production() {
   }
   function flattenOptionChildren(children) {
     var content = "";
-    React3.Children.forEach(children, function(child) {
+    React2.Children.forEach(children, function(child) {
       null != child && (content += child);
     });
     return content;
@@ -12689,11 +12697,18 @@ function requireServer_edge() {
 }
 var server_edgeExports = requireServer_edge();
 var reactExports = requireReact();
-const React2 = /* @__PURE__ */ getDefaultExportFromCjs(reactExports);
-const React = /* @__PURE__ */ _mergeNamespaces({
+const React = /* @__PURE__ */ getDefaultExportFromCjs(reactExports);
+const React$1 = /* @__PURE__ */ _mergeNamespaces({
   __proto__: null,
-  default: React2
+  default: React
 }, [reactExports]);
+let _LayoutSegmentCtx = null;
+function getLayoutSegmentContext() {
+  if (_LayoutSegmentCtx === null && typeof reactExports.createContext === "function") {
+    _LayoutSegmentCtx = reactExports.createContext(0);
+  }
+  return _LayoutSegmentCtx;
+}
 let _serverContext = null;
 let _serverInsertedHTMLCallbacks = [];
 let _getServerContext = () => _serverContext;
@@ -12986,6 +13001,7 @@ const navigation = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePr
   _registerStateAccessors,
   clearServerInsertedHTML,
   flushServerInsertedHTML,
+  getLayoutSegmentContext,
   getPrefetchCache,
   getPrefetchedUrls,
   setNavigationContext,
@@ -13135,7 +13151,7 @@ async function handleSsr(rscStream, navContext, fontData) {
         }
       });
       const insertedElements = flushServerInsertedHTML2();
-      const { createElement, Fragment } = await Promise.resolve().then(() => React);
+      const { createElement, Fragment } = await Promise.resolve().then(() => React$1);
       let insertedHTML = "";
       for (const el of insertedElements) {
         try {
@@ -13254,8 +13270,8 @@ const _virtual_vinextAppSsrEntry = {
   }
 };
 export {
-  React as R,
-  React2 as a,
+  React$1 as R,
+  React as a,
   getPrefetchedUrls as b,
   useRouter as c,
   usePathname as d,
@@ -13263,6 +13279,7 @@ export {
   reactDomExports as e,
   ReactDOM as f,
   getDefaultExportFromCjs as g,
+  getLayoutSegmentContext as h,
   handleSsr,
   reactExports as r,
   storePrefetchResponse as s,

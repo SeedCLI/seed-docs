@@ -4,12 +4,12 @@
     "name": "framework",
     "isDynamicEntry": true
   },
-  "_orama-cloud-legacy-Caf8mcU9-COrC5OWn.js": {
-    "file": "assets/orama-cloud-legacy-Caf8mcU9-COrC5OWn.js",
+  "_orama-cloud-legacy-Caf8mcU9-DG_m_AiA.js": {
+    "file": "assets/orama-cloud-legacy-Caf8mcU9-DG_m_AiA.js",
     "name": "orama-cloud-legacy-Caf8mcU9",
     "isDynamicEntry": true,
     "imports": [
-      "_worker-entry-BRCw73UE.js",
+      "_worker-entry-1EO2QjRu.js",
       "_framework-CYJZ4fBm.js",
       "virtual:vinext-app-browser-entry"
     ],
@@ -19,8 +19,8 @@
       "node_modules/fumadocs-core/dist/static-BUXJwBmr.js"
     ]
   },
-  "_worker-entry-BRCw73UE.js": {
-    "file": "assets/worker-entry-BRCw73UE.js",
+  "_worker-entry-1EO2QjRu.js": {
+    "file": "assets/worker-entry-1EO2QjRu.js",
     "name": "worker-entry",
     "isDynamicEntry": true,
     "imports": [
@@ -28,7 +28,7 @@
       "virtual:vinext-app-browser-entry"
     ],
     "dynamicImports": [
-      "_orama-cloud-legacy-Caf8mcU9-COrC5OWn.js",
+      "_orama-cloud-legacy-Caf8mcU9-DG_m_AiA.js",
       "node_modules/vinext/dist/shims/router.js"
     ]
   },
@@ -39,19 +39,19 @@
     "isDynamicEntry": true
   },
   "node_modules/fumadocs-core/dist/static-BUXJwBmr.js": {
-    "file": "assets/static-BUXJwBmr-BXQVB0rb.js",
+    "file": "assets/static-BUXJwBmr-BdDXZlz_.js",
     "name": "static-BUXJwBmr",
     "src": "node_modules/fumadocs-core/dist/static-BUXJwBmr.js",
     "isDynamicEntry": true,
     "imports": [
-      "_orama-cloud-legacy-Caf8mcU9-COrC5OWn.js",
-      "_worker-entry-BRCw73UE.js",
+      "_orama-cloud-legacy-Caf8mcU9-DG_m_AiA.js",
+      "_worker-entry-1EO2QjRu.js",
       "_framework-CYJZ4fBm.js",
       "virtual:vinext-app-browser-entry"
     ]
   },
   "node_modules/vinext/dist/shims/router.js": {
-    "file": "assets/router-gDDUsOnS.js",
+    "file": "assets/router-DIeRr-w1.js",
     "name": "router",
     "src": "node_modules/vinext/dist/shims/router.js",
     "isDynamicEntry": true,
@@ -64,7 +64,7 @@
     ]
   },
   "virtual:vinext-app-browser-entry": {
-    "file": "assets/index-DxyZBMBd.js",
+    "file": "assets/index-lL3wSEKq.js",
     "name": "index",
     "src": "virtual:vinext-app-browser-entry",
     "isEntry": true,
@@ -73,13 +73,15 @@
       "_framework-CYJZ4fBm.js"
     ],
     "dynamicImports": [
-      "_worker-entry-BRCw73UE.js",
-      "_worker-entry-BRCw73UE.js",
-      "_worker-entry-BRCw73UE.js",
-      "_worker-entry-BRCw73UE.js",
-      "_worker-entry-BRCw73UE.js",
-      "_worker-entry-BRCw73UE.js",
-      "_worker-entry-BRCw73UE.js"
+      "_worker-entry-1EO2QjRu.js",
+      "_worker-entry-1EO2QjRu.js",
+      "_worker-entry-1EO2QjRu.js",
+      "_worker-entry-1EO2QjRu.js",
+      "_worker-entry-1EO2QjRu.js",
+      "_worker-entry-1EO2QjRu.js",
+      "_worker-entry-1EO2QjRu.js",
+      "_worker-entry-1EO2QjRu.js",
+      "_worker-entry-1EO2QjRu.js"
     ]
   }
 }
