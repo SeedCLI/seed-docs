@@ -1,7 +1,6 @@
 import { getPageImage, source } from '@/lib/source';
 import { notFound } from 'next/navigation';
-import { ImageResponse } from '@takumi-rs/image-response';
-import { generate as DefaultImage } from 'fumadocs-ui/og/takumi';
+import { generateOGImage, generate as DefaultImage } from 'fumadocs-ui/og';
 
 export const revalidate = false;
 
@@ -10,14 +9,13 @@ export async function GET(_req: Request, { params }: RouteContext<'/og/[...slug]
   const page = source.getPage(slug.slice(0, -1));
   if (!page) notFound();
 
-  return new ImageResponse(
-    <DefaultImage title={page.data.title} description={page.data.description} site="Seed CLI" />,
-    {
-      width: 1200,
-      height: 630,
-      format: 'webp',
-    },
-  );
+  return generateOGImage({
+    title: page.data.title,
+    description: page.data.description,
+    site: 'Seed CLI',
+    primaryColor: 'rgba(124, 197, 118, 0.3)',
+    primaryTextColor: 'rgb(124, 197, 118)',
+  });
 }
 
 export function generateStaticParams() {

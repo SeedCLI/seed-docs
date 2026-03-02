@@ -1,4 +1,8 @@
 {
+  "/Users/devoresyah/Documents/augment-projects/seed-docs/node_modules/@vercel/og/dist/resvg.wasm": {
+    "file": "assets/resvg-Cjh1zH0p.wasm",
+    "src": "/Users/devoresyah/Documents/augment-projects/seed-docs/node_modules/@vercel/og/dist/resvg.wasm"
+  },
   "node_modules/react-dom/server.react-server.js": {
     "file": "assets/server.react-server-CENK6D1j.js",
     "name": "server.react-server",
@@ -14,7 +18,7 @@
       "node_modules/react-dom/server.react-server.js"
     ],
     "css": [
-      "assets/index-DBUd8z_m.css"
+      "assets/index-By_CJSi6.css"
     ]
   }
 }
