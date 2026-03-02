@@ -13,7 +13,7 @@ export function baseOptions(): BaseLayoutProps {
       title: (
         <>
           <Image
-            src="/logo.ico"
+            src="https://seedcli.dev/logo.png"
             alt="Seed CLI"
             width={24}
             height={24}
