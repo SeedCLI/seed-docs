@@ -4,10 +4,16 @@ description: File operations, path helpers, and directory management.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/filesystem
+npm install @seedcli/filesystem
 ```
 
-The filesystem module wraps Bun's file APIs with a consistent, Promise-based interface for reading, writing, copying, moving, and finding files.
+```ts tab="Import"
+import * as filesystem from '@seedcli/filesystem'
+```
+
+Inside a Seed command, this same API is available as `seed.filesystem`; when using the package directly, import from `@seedcli/filesystem`.
+
+The filesystem module provides a consistent, Promise-based interface for reading, writing, copying, moving, and finding files.
 
 ## Reading Files
 
@@ -68,7 +74,7 @@ await seed.filesystem.rename('old.ts', 'new.ts')
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `overwrite` | `boolean` | `false` | Overwrite existing files |
+| `overwrite` | `boolean` | `true` | Overwrite existing files |
 | `filter` | `(path: string) => boolean` | — | Filter function |
 
 ## Remove
@@ -144,7 +150,7 @@ path.cwd()                          // Current working directory
 ## Directory Operations
 
 ```ts
-// List files in a directory
+// List entries in a directory (files and subdirectories)
 const files = await seed.filesystem.list('src/commands')
 // => ['deploy.ts', 'init.ts', 'build.ts']
 
@@ -166,11 +172,12 @@ const tmpDir = await seed.filesystem.tmpDir({ prefix: 'build-' })
 // Create a temporary file
 const tmpFile = await seed.filesystem.tmpFile({
   ext: '.json',
-  prefix: 'config-',
   dir: '/tmp',
 })
-// => '/tmp/config-xyz789.json'
+// => '/tmp/<uuid>.json'
 ```
+
+`prefix` only affects the auto-created temp directory when `dir` is omitted.
 
 ## File Info
 

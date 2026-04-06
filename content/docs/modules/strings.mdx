@@ -4,8 +4,14 @@ description: String manipulation, case conversion, and pluralization.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/strings
+npm install @seedcli/strings
 ```
+
+```ts tab="Import"
+import * as strings from '@seedcli/strings'
+```
+
+The standalone package exports plain functions under `strings.*`. Inside a Seed command handler, the same API is available as `seed.strings.*`.
 
 The strings module provides case conversion, pluralization, and common string manipulation utilities.
 
@@ -120,3 +126,9 @@ seed.strings.template('Hello, {{name}}! Welcome to {{place}}.', {
 | `isEmpty` | `(str: string \| null \| undefined) => boolean` | Check if empty |
 | `isNotEmpty` | `(str: string \| null \| undefined) => boolean` | Check if not empty |
 | `template` | `(str: string, data: Record<string, string>) => string` | Simple templating |
+
+## Types
+
+| Type | Description |
+|------|-------------|
+| `StringsModule` | Interface for the full strings API exposed as `seed.strings`. |

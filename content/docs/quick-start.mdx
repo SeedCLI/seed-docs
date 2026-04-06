@@ -4,6 +4,7 @@ description: Build your first CLI tool with Seed CLI in under 5 minutes.
 ---
 
 import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Callout } from 'fumadocs-ui/components/callout';
 
 ## Create a CLI in 5 Minutes
@@ -13,74 +14,103 @@ import { Callout } from 'fumadocs-ui/components/callout';
 <Step>
 ### Scaffold a project
 
-```bash
-bun create seedcli my-cli
-cd my-cli
-bun install
-```
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}>
+  <Tab value="npm">
+  ```bash
+  npm create seedcli my-cli
+  cd my-cli
+  ```
+  </Tab>
+  <Tab value="pnpm">
+  ```bash
+  pnpm create seedcli my-cli
+  cd my-cli
+  ```
+  </Tab>
+  <Tab value="yarn">
+  ```bash 
+  yarn create seedcli my-cli 
+  cd my-cli
+  ```
+  </Tab>
+  <Tab value="bun">
+  ```bash
+  bun create seedcli my-cli
+  cd my-cli
+  ```
+  </Tab>
+</Tabs>
+
+Dependencies are installed automatically. If you used `--no-install`, run your package manager's install command now.
 </Step>
 
 <Step>
-### Define a command
+### Explore the scaffolded command
+
+The Full template includes an example command at `src/commands/hello.ts`:
 
 ```ts title="src/commands/hello.ts"
-import { command, arg, flag } from '@seedcli/core'
+import { command, arg, flag } from "@seedcli/core";
 
 export default command({
-  name: 'hello',
-  description: 'Greet someone',
+  name: "hello",
+  description: "Say hello",
   args: {
-    name: arg({ type: 'string', required: true, description: 'Name to greet' }),
+    name: arg({ type: "string", description: "Who to greet" }),
   },
   flags: {
-    color: flag({
-      type: 'string',
-      alias: 'c',
-      description: 'Greeting color',
-      choices: ['red', 'green', 'blue'] as const,
-      default: 'green',
-    }),
+    loud: flag({ type: "boolean", default: false, alias: "l", description: "SHOUT the greeting" }),
+    timed: flag({ type: "boolean", default: false, alias: "t", description: "Show execution time" }),
   },
-  run: async (seed) => {
-    // seed.args.name is typed as string
-    // seed.flags.color is typed as 'red' | 'green' | 'blue'
-    const { colors } = seed.print
-    const colorFn = colors[seed.flags.color]
-    seed.print.info(colorFn(`Hello, ${seed.args.name}!`))
+  run: async ({ args, flags, print, timer }) => {
+    if (flags.timed) timer.start();
+
+    const name = args.name ?? "World";
+    const greeting = `Hello, ${name}!`;
+    print.info(flags.loud ? greeting.toUpperCase() : greeting);
+
+    if (flags.timed) print.muted(`Done in ${timer.stop()}`);
   },
-})
+});
 ```
+
+Arguments and flags are fully typed — `args.name` is `string | undefined`, `flags.loud` is `boolean`. The `timer` context module provides simple profiling.
 </Step>
 
 <Step>
-### Set up the entry point
+### Review the entry point
 
-```ts title="src/cli.ts"
-#!/usr/bin/env bun
-import { build } from '@seedcli/core'
+The scaffolded entry point at `src/index.ts` uses the builder pattern with auto-discovery:
 
-const runtime = build('my-cli')
-  .src(import.meta.dir)
-  .version('1.0.0')
+```ts title="src/index.ts"
+#!/usr/bin/env node
+import { build } from "@seedcli/core";
+
+const cli = build("my-cli")
+  .src(import.meta.dirname) // Auto-discovers commands/ and extensions/
   .help()
-  .debug()
-  .create()
+  .version("0.1.0")
+  .create();
 
-await runtime.run()
+await cli.run();
 ```
+
+<Callout type="info">
+  You can add `.debug()` to enable `--debug` and `--verbose` global flags for development.
+</Callout>
 </Step>
 
 <Step>
 ### Run it
 
 ```bash
-bun src/cli.ts hello World
+npm run dev -- hello World
 # => Hello, World!
 
-bun src/cli.ts hello World --color red
-# => Hello, World! (in red)
+npm run dev -- hello --loud
+# => HELLO, WORLD!
 
-bun src/cli.ts --help
+npm run dev -- --help
 # => Shows help with all commands
 ```
 </Step>
@@ -92,74 +122,66 @@ bun src/cli.ts --help
 For simple CLIs without the builder pattern, use `run()`:
 
 ```ts title="src/cli.ts"
-#!/usr/bin/env bun
-import { run, command, arg } from '@seedcli/core'
+#!/usr/bin/env node
+import { run, command, arg } from "@seedcli/core";
 
 await run({
-  name: 'my-cli',
-  version: '1.0.0',
+  name: "my-cli",
+  version: "1.0.0",
   commands: [
     command({
-      name: 'greet',
+      name: "greet",
       args: {
-        name: arg({ type: 'string', required: true }),
+        name: arg({ type: "string", required: true }),
       },
-      run: (seed) => {
-        seed.print.info(`Hello, ${seed.args.name}!`)
+      run: ({ args, print }) => {
+        print.info(`Hello, ${args.name}!`);
       },
     }),
   ],
-})
+});
 ```
 
 ## Using the Seed Context
 
-Every command receives a `seed` context object with access to all modules:
+Every command's `run` function receives the seed context with access to all built-in modules — no extra installs needed:
 
 ```ts title="src/commands/init.ts"
-import { command, flag } from '@seedcli/core'
+import { command, flag } from "@seedcli/core";
+import { join } from "node:path";
 
 export default command({
-  name: 'init',
-  description: 'Initialize a new project',
+  name: "init",
+  description: "Initialize a new project",
   flags: {
-    template: flag({
-      type: 'string',
-      alias: 't',
-      description: 'Project template',
-      choices: ['basic', 'full'] as const,
-      default: 'basic',
-    }),
+    name: flag({ type: "string", required: true, description: "Project name" }),
   },
-  run: async (seed) => {
-    // Print module
-    seed.print.info('Initializing project...')
+  run: async ({ flags, print, prompt, filesystem, template, packageManager }) => {
+    print.info("Initializing project...");
 
-    // Prompt module
-    const name = await seed.prompt.input({ message: 'Project name?' })
-    const useTs = await seed.prompt.confirm({ message: 'Use TypeScript?' })
+    const useTs = await prompt.confirm({ message: "Use TypeScript?" });
 
-    // Filesystem module
-    await seed.filesystem.ensureDir(name)
-    await seed.filesystem.writeJson(`${name}/package.json`, {
-      name,
-      version: '0.0.1',
-    })
+    // Create project directory and write package.json
+    const dir = join(process.cwd(), flags.name);
+    await filesystem.ensureDir(dir);
+    await filesystem.writeJson(join(dir, "package.json"), {
+      name: flags.name,
+      version: "0.0.1",
+    });
 
-    // Template module
-    await seed.template.generate({
-      template: 'init',
-      target: name,
-      props: { name, useTs, template: seed.flags.template },
-    })
+    // Render a template file into the project
+    await template.generate({
+      template: join(import.meta.dirname, "../templates/readme.md.eta"),
+      target: join(dir, "README.md"),
+      props: { name: flags.name, useTs },
+    });
 
-    // System module
-    const pm = await seed.packageManager.detect()
-    await seed.packageManager.install([], { cwd: name })
+    // Install dependencies in the new project
+    await packageManager.install([], { cwd: dir });
 
-    seed.print.success(`Project "${name}" created!`)
+    print.success(`Project "${flags.name}" created!`);
   },
-})
+});
 ```
 
 ## Subcommands
@@ -167,16 +189,16 @@ export default command({
 Nest commands for complex CLIs:
 
 ```ts title="src/commands/db.ts"
-import { command } from '@seedcli/core'
-import migrate from './db/migrate'
-import seed from './db/seed'
-import reset from './db/reset'
+import { command } from "@seedcli/core";
+import migrate from "./db/migrate";
+import seed from "./db/seed";
+import reset from "./db/reset";
 
 export default command({
-  name: 'db',
-  description: 'Database operations',
+  name: "db",
+  description: "Database operations",
   subcommands: [migrate, seed, reset],
-})
+});
 ```
 
 ```bash
@@ -187,14 +209,16 @@ my-cli db reset --force
 
 ## Dev Mode
 
-During development, use Bun's watch mode for instant feedback:
+During development, use the `dev` script for automatic restart on file changes:
 
 ```bash
-bun --watch src/cli.ts hello World
+npm run dev
 ```
 
+This runs `seed dev` under the hood, which watches for file changes and restarts automatically.
+
 <Callout type="info">
-  Changes to any file will automatically restart the CLI.
+  Scaffolded projects include `dev`, `build`, `compile`, and `test` scripts. Run them with your preferred package manager: `npm run dev`, `pnpm dev`, `yarn dev`, etc.
 </Callout>
 
 ## What's Next?

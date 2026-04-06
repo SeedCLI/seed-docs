@@ -4,7 +4,7 @@ description: Generate shell completions for bash, zsh, fish, and PowerShell.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/completions
+npm install @seedcli/completions
 ```
 
 The completions module generates shell completion scripts for all four major shells: bash, zsh, fish, and PowerShell. It auto-generates completions from your command definitions.
@@ -80,11 +80,10 @@ const shell = seed.completions.detect()
 
 The completion scripts are auto-generated from your command definitions. They include:
 
-- **Command names** and aliases
+- **Command names** (Fish emits command aliases; Bash emits top-level aliases only; Zsh and PowerShell currently omit command aliases)
 - **Subcommand names**
 - **Flag names** (`--verbose`, `-v`)
-- **Flag values** for flags with `choices`
-- **Argument values** for args with `choices`
+- **Flag values** for flags with `choices` in zsh and fish
 
 ```ts
 command({
@@ -106,7 +105,7 @@ command({
 })
 ```
 
-With this definition, typing `my-cli deploy ` and pressing Tab would suggest `staging` and `production`, and `--region ` would suggest the three region options.
+Argument choice completion is not currently generated. In zsh and fish, typing `my-cli deploy --region ` and pressing Tab would suggest the three region options.
 
 ## Shell Types
 
@@ -117,6 +116,8 @@ type ShellType = 'bash' | 'zsh' | 'fish' | 'powershell'
 ## Manual Installation
 
 Users can install completions manually by redirecting the output:
+
+Bash output relies on the `_init_completion` helper from `bash-completion`. Make sure `bash-completion` is installed and sourced before using the generated bash script.
 
 ```bash
 # Bash

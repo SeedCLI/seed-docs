@@ -4,7 +4,7 @@ description: HTTP client with retry support and OpenAPI typed client.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/http
+npm install @seedcli/http
 ```
 
 The HTTP module provides a simple fetch-based HTTP client and an OpenAPI-typed client via `openapi-fetch`.
@@ -39,7 +39,7 @@ const { headers } = await seed.http.head('https://api.example.com/health')
 | Option | Type | Description |
 |--------|------|-------------|
 | `headers` | `Record<string, string>` | Request headers |
-| `params` | `Record<string, string \| number>` | URL query parameters |
+| `params` | `Record<string, string \| number \| boolean \| undefined>` | URL query parameters |
 | `timeout` | `number` | Timeout in milliseconds |
 | `retry` | `number \| RetryConfig` | Retry configuration |
 | `signal` | `AbortSignal` | Abort signal |
@@ -81,7 +81,7 @@ await seed.http.get('https://api.example.com/data', {
 |--------|------|---------|-------------|
 | `count` | `number` | — | Number of retries |
 | `delay` | `number` | `1000` | Initial delay in ms |
-| `backoff` | `'linear' \| 'exponential'` | `'linear'` | Backoff strategy |
+| `backoff` | `'linear' \| 'exponential'` | `'exponential'` | Backoff strategy |
 | `retryOn` | `number[]` | `[408, 429, 500, 502, 503, 504]` | Status codes to retry |
 | `onRetry` | `(error: Error, attempt: number) => void` | — | Callback on each retry |
 
@@ -169,13 +169,22 @@ await seed.http.download('https://example.com/archive.zip', './downloads/archive
 For APIs with an OpenAPI schema, get full type safety:
 
 ```ts
+import { createOpenAPIClient } from '@seedcli/http'
 import type { paths } from './api-schema'  // Generated from OpenAPI spec
 
-const api = seed.http.createOpenAPIClient<paths>({
+const api = await createOpenAPIClient<paths>({
   baseUrl: 'https://api.example.com',
   headers: { Authorization: `Bearer ${token}` },
 })
+```
 
+If you use `createOpenAPIClient()`, also install the optional peer dependency:
+
+```bash
+npm install openapi-fetch
+```
+
+```ts
 // Fully typed request and response
 const { data, error } = await api.GET('/users/{id}', {
   params: { path: { id: '123' } },
@@ -189,7 +198,7 @@ const { data } = await api.POST('/users', {
 Generate types from an OpenAPI spec using `openapi-typescript`:
 
 ```bash
-bunx openapi-typescript https://api.example.com/openapi.json -o src/api-schema.ts
+npx openapi-typescript https://api.example.com/openapi.json -o src/api-schema.ts
 ```
 
 ## Error Types

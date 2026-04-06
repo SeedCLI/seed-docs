@@ -5,7 +5,7 @@ description: Extend your CLI with reusable, distributable plugins.
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-Plugins let you package commands, extensions, templates, and configuration into reusable, distributable npm packages. They're the primary mechanism for sharing functionality across CLI projects.
+Plugins let you package commands and extensions into reusable, distributable npm packages. They're the primary mechanism for sharing functionality across CLI projects.
 
 ## Defining a Plugin
 
@@ -20,19 +20,19 @@ export default definePlugin({
 
   commands: [
     command({
-      name: 'docker:build',
+      name: 'docker-build',
       description: 'Build a Docker image',
       flags: {
         tag: flag({ type: 'string', alias: 't', description: 'Image tag' }),
         push: flag({ type: 'boolean', description: 'Push after build' }),
       },
-      run: async (seed) => {
-        const tag = seed.flags.tag ?? 'latest'
-        await seed.system.exec(`docker build -t ${tag} .`)
-        if (seed.flags.push) {
-          await seed.system.exec(`docker push ${tag}`)
+      run: async ({ flags, system, print }) => {
+        const tag = flags.tag ?? 'latest'
+        await system.exec(`docker build -t ${tag} .`)
+        if (flags.push) {
+          await system.exec(`docker push ${tag}`)
         }
-        seed.print.success(`Built image: ${tag}`)
+        print.success(`Built image: ${tag}`)
       },
     }),
   ],
@@ -46,12 +46,6 @@ export default definePlugin({
     },
   ],
 
-  templates: './templates',
-
-  defaults: {
-    registry: 'docker.io',
-    dockerfile: 'Dockerfile',
-  },
 })
 ```
 
@@ -66,7 +60,7 @@ export default definePlugin({
 | `peerPlugins` | `Record<string, string>` | Required peer plugin versions |
 | `commands` | `Command[]` | Commands to register |
 | `extensions` | `ExtensionConfig[]` | Extensions to register |
-| `templates` | `string` | Path to template directory |
+| `templates` | `string` | Path to templates directory |
 | `defaults` | `Record<string, unknown>` | Default configuration values |
 
 ## Loading Plugins
@@ -95,7 +89,7 @@ build('my-cli')
   .plugins('./plugins')
 ```
 
-Discovers all plugin files in the directory.
+Scans the directory for subdirectories (including symlinks from `npm link`) and imports each as a plugin module.
 
 ## Peer Plugin Dependencies
 
@@ -125,60 +119,6 @@ definePlugin({
   version: '1.0.0',
   seedcli: '>=1.0.0 <2.0.0',
   // ...
-})
-```
-
-## Plugin Templates
-
-Plugins can provide templates that are accessible via the template module:
-
-```ts
-definePlugin({
-  name: 'react',
-  version: '1.0.0',
-  templates: './templates',
-  commands: [
-    command({
-      name: 'generate:component',
-      args: { name: arg({ type: 'string', required: true }) },
-      run: async (seed) => {
-        await seed.template.generate({
-          template: 'component',  // Resolved from plugin's template dir
-          target: `src/components/${seed.args.name}`,
-          props: { name: seed.args.name },
-        })
-      },
-    }),
-  ],
-})
-```
-
-## Plugin Defaults
-
-Default configuration values that can be overridden by the user's config file:
-
-```ts
-definePlugin({
-  name: 'deploy',
-  version: '1.0.0',
-  defaults: {
-    region: 'us-east-1',
-    timeout: 300,
-  },
-})
-```
-
-Users can override in their config:
-
-```ts title="myapp.config.ts"
-import { defineConfig } from '@seedcli/core'
-
-export default defineConfig({
-  plugins: {
-    deploy: {
-      region: 'eu-west-1',
-    },
-  },
 })
 ```
 

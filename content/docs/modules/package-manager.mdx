@@ -4,8 +4,24 @@ description: Detect and operate with npm, yarn, pnpm, or bun.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/package-manager
+npm install @seedcli/package-manager
 ```
+
+```ts tab="Import"
+import {
+  create,
+  detect,
+  detectFromUserAgent,
+  getCommands,
+  install,
+  installDev,
+  pmRunPrefix,
+  remove,
+  run,
+} from '@seedcli/package-manager'
+```
+
+In Seed CLI commands, these same methods are also available as `seed.packageManager`.
 
 The package manager module auto-detects which package manager a project uses and provides a unified API for installing, removing, and running scripts.
 
@@ -22,7 +38,16 @@ Detection priority:
 3. `yarn.lock` → `yarn`
 4. `pnpm-lock.yaml` → `pnpm`
 5. `packageManager` field in `package.json`
-6. Default: `bun`
+6. Default: `npm`
+
+## Detect From User Agent
+
+```ts
+const pm = detectFromUserAgent()
+// => 'bun' | 'npm' | 'yarn' | 'pnpm' | undefined
+```
+
+Infers the invoking package manager from `process.env.npm_config_user_agent`.
 
 ## Install Packages
 
@@ -115,4 +140,13 @@ const npmCmds = seed.packageManager.getCommands('npm')
 //   remove: 'npm uninstall',
 //   run: 'npm run',
 // }
+```
+
+## Run Prefix Helper
+
+```ts
+pmRunPrefix('npm')  // => 'npm run'
+pmRunPrefix('pnpm') // => 'pnpm run'
+pmRunPrefix('bun')  // => 'bun run'
+pmRunPrefix('yarn') // => 'yarn'
 ```

@@ -1,0 +1,95 @@
+---
+title: Build
+description: Bundle a Seed CLI app for Node.js or compile it into a standalone executable.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Seed CLI gives you two build modes:
+
+- **Bundle for Node.js** with `seed build`
+- **Compile a standalone executable** with `seed build --compile`
+
+The Full and Minimal templates already include both scripts:
+
+```json title="package.json"
+{
+  "scripts": {
+    "build": "seed build",
+    "compile": "seed build --compile --outfile my-cli"
+  }
+}
+```
+
+If you generated your project with Seed, `@seedcli/cli` is already installed as a dev dependency. If you removed it, add it back before using `seed build`.
+
+## Bundle for Node.js
+
+Use this when you want a JavaScript build that runs on Node.js:
+
+```bash
+npm run build
+# or
+seed build
+```
+
+`seed build` reads your project entry point, resolves auto-discovered commands, extensions, and plugins into a static build entry, then bundles the result into `dist/`.
+
+This is the usual build mode for CLIs you plan to publish on npm.
+
+## Compile a Standalone Executable
+
+Use this when you want to ship a single executable instead of requiring Node.js on the target machine.
+
+```bash
+npm run compile
+# or
+seed build --compile
+```
+
+By default, `seed build --compile` targets the current host platform. You can target specific platforms with `--target`:
+
+```bash
+seed build --compile \
+  --target node24-macos-arm64,node24-linux-x64,node24-win-x64 \
+  --outdir dist
+```
+
+Current compile targets:
+
+- `node24-linux-x64`
+- `node24-linux-arm64`
+- `node24-macos-x64`
+- `node24-macos-arm64`
+- `node24-win-x64`
+- `node24-win-arm64`
+- `node24-linuxstatic-x64`
+- `all`
+
+Use `--outfile` when you want one explicit output path for a single target. For multi-target builds, use `--outdir`.
+
+## Configure Builds in `seed.config.ts`
+
+You can keep your preferred build defaults in `seed.config.ts`:
+
+```ts title="seed.config.ts"
+import { defineConfig } from "@seedcli/core";
+
+export default defineConfig({
+  build: {
+    bundle: {
+      outdir: "dist",
+    },
+    compile: {
+      targets: ["node24-macos-arm64", "node24-linux-x64", "node24-win-x64"],
+    },
+  },
+});
+```
+
+CLI flags still override these defaults for one-off builds.
+
+<Callout type="info">
+  For shipping guidance, see [Distribution](/distribution). For the full
+  `seed build` flag reference, see [CLI Tools](/cli#seed-build).
+</Callout>

@@ -4,8 +4,34 @@ description: Semantic versioning utilities for parsing, comparing, and bumping v
 ---
 
 ```bash tab="Install"
-bun add @seedcli/semver
+npm install @seedcli/semver
 ```
+
+```ts tab="Import"
+import {
+  bump,
+  clean,
+  coerce,
+  compare,
+  diff,
+  eq,
+  gt,
+  gte,
+  lt,
+  lte,
+  major,
+  maxSatisfying,
+  minor,
+  patch,
+  prerelease,
+  satisfies,
+  sort,
+  valid,
+  type ReleaseType,
+} from '@seedcli/semver'
+```
+
+Inside Seed commands and middleware, this module is already available as `seed.semver`; no extra install is required for that usage.
 
 The semver module wraps the `semver` npm package with a clean API for version validation, comparison, and manipulation.
 
@@ -39,6 +65,8 @@ seed.semver.coerce('nope')    // null
 
 ## Comparison
 
+These helpers throw `Error` if any version argument is not valid semver.
+
 ```ts
 seed.semver.gt('2.0.0', '1.0.0')   // true
 seed.semver.gte('1.0.0', '1.0.0')  // true
@@ -68,6 +96,8 @@ seed.semver.patch('1.2.3')       // 3
 seed.semver.prerelease('1.2.3-beta.1')  // ['beta', 1]
 seed.semver.prerelease('1.2.3')         // null
 ```
+
+`major`, `minor`, and `patch` also throw `Error` for invalid versions.
 
 ## Bumping Versions
 
@@ -111,23 +141,24 @@ seed.semver.diff('1.0.0', '1.0.0')     // null
 
 ## API Reference
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
+| Export | Signature | Description |
+|--------|-----------|-------------|
 | `valid` | `(version: string) => string \| null` | Return cleaned version or null |
 | `clean` | `(version: string) => string \| null` | Clean version string |
 | `coerce` | `(version: string) => string \| null` | Coerce to valid semver |
 | `satisfies` | `(version: string, range: string) => boolean` | Check range satisfaction |
-| `gt` | `(a: string, b: string) => boolean` | Greater than |
-| `gte` | `(a: string, b: string) => boolean` | Greater than or equal |
-| `lt` | `(a: string, b: string) => boolean` | Less than |
-| `lte` | `(a: string, b: string) => boolean` | Less than or equal |
-| `eq` | `(a: string, b: string) => boolean` | Equal |
-| `compare` | `(a: string, b: string) => -1 \| 0 \| 1` | Compare two versions |
-| `diff` | `(a: string, b: string) => ReleaseType \| null` | Get release type between versions |
+| `gt` | `(a: string, b: string) => boolean` | Greater than; throws on invalid semver |
+| `gte` | `(a: string, b: string) => boolean` | Greater than or equal; throws on invalid semver |
+| `lt` | `(a: string, b: string) => boolean` | Less than; throws on invalid semver |
+| `lte` | `(a: string, b: string) => boolean` | Less than or equal; throws on invalid semver |
+| `eq` | `(a: string, b: string) => boolean` | Equal; throws on invalid semver |
+| `compare` | `(a: string, b: string) => -1 \| 0 \| 1` | Compare two versions; throws on invalid semver |
+| `diff` | `(a: string, b: string) => ReleaseType \| null` | Get release type between versions; throws on invalid semver |
 | `bump` | `(version: string, release: ReleaseType, identifier?: string) => string \| null` | Bump version |
-| `major` | `(version: string) => number` | Get major version |
-| `minor` | `(version: string) => number` | Get minor version |
-| `patch` | `(version: string) => number` | Get patch version |
-| `prerelease` | `(version: string) => (string \| number)[] \| null` | Get prerelease identifiers |
+| `major` | `(version: string) => number` | Get major version; throws on invalid semver |
+| `minor` | `(version: string) => number` | Get minor version; throws on invalid semver |
+| `patch` | `(version: string) => number` | Get patch version; throws on invalid semver |
+| `prerelease` | `(version: string) => ReadonlyArray<string \| number> \| null` | Get prerelease identifiers |
 | `sort` | `(versions: string[]) => string[]` | Sort versions ascending |
 | `maxSatisfying` | `(versions: string[], range: string) => string \| null` | Find best match |
+| `ReleaseType` | `"major" \| "minor" \| "patch" \| "premajor" \| "preminor" \| "prepatch" \| "prerelease"` | Release kinds accepted by `bump` and returned by `diff` |

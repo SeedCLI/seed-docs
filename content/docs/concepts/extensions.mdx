@@ -16,14 +16,14 @@ export default defineExtension({
   name: 'auth',
   description: 'Authentication management',
   setup: async (seed) => {
-    const token = await seed.config.get('authToken')
+    const token = process.env.AUTH_TOKEN
     if (!token) {
-      seed.print.warning('Not authenticated. Run "my-cli login" first.')
+      seed.print.warning('Not authenticated. Set AUTH_TOKEN or run "my-cli login" first.')
     }
     // Attach to seed for use in commands
     seed.auth = { token, isAuthenticated: !!token }
   },
-  teardown: async (seed) => {
+  teardown: (seed) => {
     // Cleanup (optional)
     seed.print.debug('Auth extension cleaned up')
   },
@@ -81,7 +81,7 @@ src/
 
 ```ts title="src/cli.ts"
 build('my-cli')
-  .src(import.meta.dir)  // Discovers extensions/ automatically
+  .src(import.meta.dirname)  // Discovers extensions/ automatically
   .create()
 ```
 

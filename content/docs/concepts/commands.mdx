@@ -189,18 +189,20 @@ interface Seed<TArgs, TFlags> {
     command: string | undefined  // Matched command name
   }
 
-  // Modules (lazily loaded)
+  // Built-in modules
   print: PrintModule
   prompt: PromptModule
-  filesystem: FilesystemModule
-  system: SystemModule
+  filesystem: typeof import("@seedcli/filesystem")
+  system: typeof import("@seedcli/system")
   http: HttpModule
   template: TemplateModule
   patching: PatchingModule
   strings: StringsModule
-  semver: SemverModule
+  semver: typeof import("@seedcli/semver")
   packageManager: PackageManagerModule
   config: ConfigModule
+  ui: typeof import("@seedcli/ui")
+  completions: typeof import("@seedcli/completions")
 
   // Metadata
   meta: {
@@ -213,7 +215,7 @@ interface Seed<TArgs, TFlags> {
 ```
 
 <Callout type="info">
-  Modules are loaded lazily — they're only initialized when first accessed, keeping startup fast.
+  All built-in modules are available on the seed context without any extra installs — they come from `@seedcli/core`'s dependencies.
 </Callout>
 
 ## Auto-Discovery
@@ -233,7 +235,7 @@ src/
 
 ```ts title="src/cli.ts"
 const runtime = build('my-cli')
-  .src(import.meta.dir)
+  .src(import.meta.dirname)
   .create()
 ```
 

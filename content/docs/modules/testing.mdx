@@ -1,19 +1,20 @@
 ---
 title: Testing
-description: Test your CLI commands with mocked prompts, config, and system calls.
+description: Test your CLI commands by capturing stdout/stderr, exit codes, and temporary environment variables.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/testing
+npm install @seedcli/testing
 ```
 
-The testing module provides utilities for testing CLI commands in isolation, with support for mocking prompts, config, system calls, and capturing output.
+The testing module provides utilities for testing CLI commands in isolation by capturing output, checking exit codes, setting temporary environment variables with `env()`, creating mock Seed contexts with `mockSeed()`, and using `createInterceptor()` directly when needed.
 
 ## Creating a Test CLI
 
 ```ts
+import { build } from '@seedcli/core'
 import { createTestCli } from '@seedcli/testing'
-import { describe, test, expect } from 'bun:test'
+import { describe, test, expect } from 'vitest'
 
 // Build your runtime as usual
 const runtime = build('my-cli')
@@ -47,65 +48,11 @@ describe('greet command', () => {
 | `stderr` | `string` | Captured standard error |
 | `exitCode` | `number` | Process exit code |
 
-## Mocking Prompts
+## Builder Methods
 
-Provide automatic responses to interactive prompts:
+`createTestCli(runtime)` returns a chainable builder with `mockPrompt()`, `mockConfig()`, `mockSystem()`, `env()`, and `run()`.
 
-```ts
-const cli = createTestCli(runtime)
-  .mockPrompt({
-    'Project name?': 'my-app',
-    'Use TypeScript?': true,
-    'License?': 'MIT',
-  })
-
-const result = await cli.run('init')
-expect(result.stdout).toContain('my-app')
-```
-
-## Mocking Config
-
-Override config values for tests:
-
-```ts
-const cli = createTestCli(runtime)
-  .mockConfig({
-    outputDir: 'test-output',
-    verbose: false,
-    plugins: [],
-  })
-
-const result = await cli.run('build')
-```
-
-## Mocking System Commands
-
-Mock shell command responses:
-
-```ts
-const cli = createTestCli(runtime)
-  .mockSystem('git status', {
-    stdout: 'On branch main\nnothing to commit',
-  })
-  .mockSystem('docker --version', {
-    stdout: 'Docker version 24.0.0',
-  })
-
-const result = await cli.run('deploy')
-```
-
-## Chaining Mocks
-
-Mocks are chainable:
-
-```ts
-const result = await createTestCli(runtime)
-  .mockPrompt({ 'Continue?': true })
-  .mockConfig({ env: 'test' })
-  .mockSystem('git status', { stdout: 'clean', stderr: '', exitCode: 0 })
-  .env({ NODE_ENV: 'test' })
-  .run('deploy staging')
-```
+In the current implementation, only `env()` affects `run()`. The `mockPrompt()`, `mockConfig()`, and `mockSystem()` methods are exposed on the builder but are not applied during execution yet.
 
 ## Mock Seed
 
@@ -167,38 +114,5 @@ test('rejects invalid port', async () => {
   const result = await createTestCli(runtime).run('serve --port 99999')
   expect(result.stderr).toContain('Port must be between')
   expect(result.exitCode).toBe(1)
-})
-```
-
-### Testing interactive flows
-
-```ts
-test('init with prompts', async () => {
-  const result = await createTestCli(runtime)
-    .mockPrompt({
-      'Project name?': 'test-project',
-      'Use TypeScript?': true,
-      'Select features:': ['eslint', 'prettier'],
-    })
-    .run('init')
-
-  expect(result.stdout).toContain('test-project')
-  expect(result.exitCode).toBe(0)
-})
-```
-
-### Testing error handling
-
-```ts
-test('handles network errors', async () => {
-  const result = await createTestCli(runtime)
-    .mockSystem('curl https://api.example.com', {
-      stdout: '',
-      stderr: 'Connection refused',
-      exitCode: 1,
-    })
-    .run('fetch-data')
-
-  expect(result.stderr).toContain('Failed to fetch')
 })
 ```

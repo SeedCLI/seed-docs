@@ -4,8 +4,25 @@ description: Interactive prompts with full type inference.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/prompt
+npm install @seedcli/prompt
 ```
+
+```ts tab="Import"
+import {
+  autocomplete,
+  confirm,
+  editor,
+  form,
+  input,
+  multiselect,
+  number,
+  password,
+  PromptCancelledError,
+  select,
+} from '@seedcli/prompt'
+```
+
+Inside a Seed command, these same APIs are available on `seed.prompt.*`; the `@seedcli/prompt` package itself exports top-level functions.
 
 The prompt module provides interactive terminal prompts powered by `@inquirer/prompts`, with added type inference and a consistent API.
 
@@ -152,7 +169,7 @@ const features = await seed.prompt.multiselect({
 |--------|------|-------------|
 | `message` | `string` | Prompt message (required) |
 | `choices` | `ReadonlyArray<Choice<T> \| T>` | Available choices (required) |
-| `default` | `ReadonlyArray<T>` | Pre-selected values |
+| `default` | `ReadonlyArray<T>` | Currently ignored by the current implementation |
 | `required` | `boolean` | At least one required |
 | `loop` | `boolean` | Enable list wrapping |
 | `validate` | `(value: ReadonlyArray<T>) => boolean \| string` | Validation function |
@@ -179,7 +196,7 @@ const pkg = await seed.prompt.autocomplete({
 |--------|------|-------------|
 | `message` | `string` | Prompt message (required) |
 | `source` | `(input: string \| undefined) => Promise<ReadonlyArray<Choice<T> \| T>>` | Async source function (required) |
-| `default` | `T` | Default value |
+| `default` | `T` | Currently ignored by the current implementation |
 
 ## Editor
 
@@ -212,6 +229,7 @@ const answers = await seed.prompt.form<{
   name: string
   version: string
   private: boolean
+  license: string
 }>([
   { name: 'name', type: 'input', message: 'Project name?' },
   { name: 'version', type: 'input', message: 'Version?', default: '0.0.1' },

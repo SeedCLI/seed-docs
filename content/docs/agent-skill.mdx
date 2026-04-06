@@ -1,0 +1,84 @@
+---
+title: Agent Skill
+description: Install the Seed CLI agent skill to get AI-powered assistance with commands, scaffolding, and framework APIs.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Seed CLI provides an [Agent Skill](https://skills.sh) that teaches AI coding agents how to work with the framework — generating commands, configuring builds, using seed context modules, and following current best practices.
+
+Once installed, your agent can help you scaffold projects, write typed commands, set up extensions and plugins, configure builds, and write tests — without needing to look up the docs manually.
+
+## Install
+
+```bash
+npx skills add SeedCLI/seedcli-skills
+```
+
+This works with any agent that supports the [Agent Skills specification](https://skills.sh).
+
+## Supported Agents
+
+| Agent | Support |
+|---|---|
+| Claude Code | Yes |
+| Cursor | Yes |
+| GitHub Copilot | Yes |
+| Cline | Yes |
+| Gemini CLI | Yes |
+
+## What the Skill Covers
+
+The skill provides your agent with accurate, source-verified knowledge about:
+
+- **Scaffolding** — Project generation with `create-seedcli`, template types (Full, Minimal, Plugin), and project structure
+- **Commands** — Defining commands with typed args, flags, subcommands, and the `run` function
+- **Builder API** — The `build()` fluent API including `.src()`, `.help()`, `.version()`, `.plugin()`, `.debug()`, and `.create()`
+- **Seed context modules** — Using `print`, `prompt`, `filesystem`, `system`, `http`, `template`, `config`, `packageManager`, `strings`, `semver`, `patching`, and `ui` from the command context
+- **Extensions and plugins** — `defineExtension()`, `definePlugin()`, lifecycle hooks, and type augmentation via `SeedExtensions`
+- **Build and compile** — `seed build`, `seed build --compile`, target platforms, `--outdir`, `--outfile`, and `seed.config.ts` options
+- **Testing** — `createTestCli()`, `mockSeed()`, prompt/config/system mocking with `@seedcli/testing`
+- **Type safety** — Inferred arg/flag types, typed config with `defineConfig()`, and typed prompt returns
+
+## How It Works
+
+The skill uses **progressive disclosure** to minimize context usage:
+
+1. **Activation** — Your agent reads the skill description and activates when you ask about Seed CLI
+2. **Core instructions** — The main skill file provides quick-reference patterns for commands, builder setup, and common workflows
+3. **Deep references** — Detailed reference files for specific modules, build configuration, and testing patterns are loaded only when needed
+
+This means your agent gets the right level of detail for each question without wasting context on irrelevant information.
+
+## Example Prompts
+
+Once the skill is installed, try asking your agent:
+
+```
+Generate a Seed CLI command with typed string args and boolean flags
+```
+
+```
+Create a plugin for Seed CLI with an extension that adds a "deploy" property to the seed context
+```
+
+```
+Set up seed build --compile for macOS and Windows targets
+```
+
+```
+Refactor this command to use seed context modules instead of direct imports
+```
+
+```
+Write tests for this Seed command using @seedcli/testing
+```
+
+<Callout type="info">
+  The skill references are kept in sync with the Seed CLI source code and documentation.
+</Callout>
+
+## Links
+
+- [Skill Repository](https://github.com/SeedCLI/seedcli-skills)
+- [skills.sh](https://skills.sh)

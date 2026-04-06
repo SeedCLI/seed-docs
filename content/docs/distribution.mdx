@@ -1,0 +1,82 @@
+---
+title: Distribution
+description: Publish a Seed CLI app on npm or ship standalone binaries to end users.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+After you build your CLI, you can ship it in two common ways:
+
+- **npm package** for users who install through `npm`, `pnpm`, `yarn`, or `bun`
+- **Standalone binary** for users who just download an executable
+
+## Publish as an npm Package
+
+Build first:
+
+```bash
+seed build
+```
+
+For npm distribution, point your `bin` field at the bundled output and publish `dist/`:
+
+```json title="package.json"
+{
+  "type": "module",
+  "bin": {
+    "my-cli": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "seed build",
+    "prepublishOnly": "seed build"
+  }
+}
+```
+
+Then publish normally:
+
+```bash
+npm publish
+```
+
+This is the right choice when your users are already comfortable installing CLIs from npm and running them on Node.js.
+
+## Ship Standalone Binaries
+
+Compile first:
+
+```bash
+seed build --compile --target node24-macos-arm64,node24-linux-x64,node24-win-x64 --outdir dist
+```
+
+This produces platform-specific executables you can attach to GitHub Releases, upload to your own download page, or distribute through internal artifact storage.
+
+Use standalone binaries when you want:
+
+- zero Node.js installation steps for end users
+- platform-specific release artifacts
+- a download-first distribution model instead of npm install
+
+## Platform Packaging, Signing, and Notarization
+
+Seed's `build` command uses Hakobu as its build backend. Seed handles entry discovery and build defaults; Hakobu handles target packaging and advanced platform-specific distribution work.
+
+Use the Hakobu docs for:
+
+- build target details
+- bundle mode behavior
+- macOS signing and notarization
+- Windows signing and metadata
+- broader cross-platform distribution guidance
+
+Recommended Hakobu references:
+
+- [Build targets](https://docs.hakobujs.dev/build/targets)
+- [Bundle mode](https://docs.hakobujs.dev/build/bundle-mode)
+- [Distribution & signing](https://docs.hakobujs.dev/distribution/cross-platform)
+
+<Callout type="info">
+  If you want the build commands themselves, start with [Build](/build). If you
+  want the raw CLI flag reference, see [CLI Tools](/cli#seed-build).
+</Callout>

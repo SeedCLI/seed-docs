@@ -1,26 +1,28 @@
 ---
 title: create-seedcli
-description: Scaffold a new Seed CLI project with bun create.
+description: Scaffold a new Seed CLI project.
 ---
 
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
-`create-seedcli` is a standalone scaffolding package that works with `bun create` for instant project setup.
+`create-seedcli` is a standalone scaffolding package for instant project setup.
 
 ## Usage
 
 ```bash
-bun create seedcli my-cli
+npm create seedcli my-cli
 ```
 
-This is equivalent to running `seed new my-cli` but doesn't require the `@seedcli/cli` package to be installed globally.
+Works with any package manager: `npm create`, `pnpm create`, `yarn create`, or `bun create`.
+
+This scaffolds the same templates as `seed new my-cli`, but it is a separate command: it can prompt for a missing project name and uses `--yes`, `--no-install`, and `--no-git` instead of `seed new`'s `--skipPrompts`, `--skipInstall`, and `--skipGit`.
 
 ## Interactive Mode
 
 When run without a name, it prompts for one:
 
 ```bash
-bun create seedcli
+npm create seedcli
 ```
 
 You'll be prompted for:
@@ -28,14 +30,17 @@ You'll be prompted for:
 1. **Project name** — Directory name and package name (kebab-cased)
 2. **Template** — Full (recommended), Minimal, or Plugin
 3. **Description** — Package description
+4. **Package manager** — `npm`, `pnpm`, `yarn`, or `bun` (default inferred from the invoking package manager or current lockfile)
 
 ## Flags
 
 | Flag | Description |
 |------|-------------|
-| `--yes, -y` | Skip all prompts, use defaults |
+| `--yes, -y` | Use defaults for template, description, and package manager. If no project name is provided, you will still be prompted for one. |
 | `--no-install` | Skip dependency installation |
 | `--no-git` | Skip git initialization |
+| `--version, -v` | Show version |
+| `--help, -h` | Show help |
 
 ## Templates
 
@@ -54,8 +59,8 @@ my-cli/
 │   └── index.ts              # Entry point (auto-discovers commands/ & extensions/)
 ├── tests/
 │   └── hello.test.ts
+├── .gitignore
 ├── biome.json
-├── bunfig.toml
 ├── package.json
 ├── seed.config.ts             # CLI configuration
 └── tsconfig.json
@@ -72,8 +77,8 @@ my-cli/
 │   └── index.ts              # Entry point with inline command
 ├── tests/
 │   └── index.test.ts
+├── .gitignore
 ├── biome.json
-├── bunfig.toml
 ├── package.json
 └── tsconfig.json
 ```
@@ -94,8 +99,8 @@ my-plugin/
 │   └── index.ts              # definePlugin() export
 ├── tests/
 │   └── plugin.test.ts        # Uses createTestCli()
+├── .gitignore
 ├── biome.json
-├── bunfig.toml
 ├── package.json              # No bin field, has peerDependencies & publishConfig
 ├── tsconfig.json
 └── tsconfig.build.json       # For publishing compiled dist/
@@ -114,23 +119,20 @@ my-plugin/
 | **Extensions** | `timer` example | None | `example` extension |
 | **Config** | `seed.config.ts` | None | None |
 | **bin field** | Yes | Yes | No |
-| **Tests** | Bun.spawn() | Bun.spawn() | `createTestCli()` |
+| **Tests** | Vitest | Vitest | Vitest + `createTestCli()` |
 | **Build** | `seed build` | `seed build` | `tsc` → `dist/` |
 
 ## Examples
 
 ```bash
 # Quick start with defaults (Full template)
-bun create seedcli my-cli --yes
-
-# Minimal template, no prompts
-bun create seedcli my-cli --yes  # then select Minimal
+npm create seedcli my-cli --yes
 
 # Skip dependency installation
-bun create seedcli my-cli --no-install
+npm create seedcli my-cli --no-install
 
 # Skip git initialization
-bun create seedcli my-cli --no-git
+npm create seedcli my-cli --no-git
 ```
 
 ## After Scaffolding
@@ -139,18 +141,21 @@ bun create seedcli my-cli --no-git
 
 ```bash
 cd my-cli
-bun run dev                    # Start with watch mode
-bun run src/index.ts --help    # Run directly
-bun link                       # Use as global command
+npm run dev                    # Start with watch mode
+npm run dev -- --help          # Run with flags
+npm run build                  # Bundle for distribution
+npm run compile                # Compile to standalone binary
 ```
 
 **For Plugin template:**
 
 ```bash
 cd my-plugin
-bun test                       # Run tests
+npm test                       # Run tests
 
 # Use in a CLI:
 # import plugin from "my-plugin"
 # build("my-cli").plugin(plugin).create()
 ```
+
+Use your preferred package manager (`npm`, `pnpm`, `yarn`, or `bun`) for all commands.

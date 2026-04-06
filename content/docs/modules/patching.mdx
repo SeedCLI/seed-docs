@@ -4,8 +4,14 @@ description: Modify existing files with surgical precision.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/patching
+npm install @seedcli/patching
 ```
+
+```ts tab="Import"
+import { append, exists, patch, patchJson, prepend } from '@seedcli/patching'
+```
+
+Inside a Seed command, these same helpers are available on `seed.patching.*`.
 
 The patching module lets you modify existing files by inserting, replacing, or deleting content at specific locations — ideal for code generation that needs to integrate with existing code.
 
@@ -112,7 +118,7 @@ if (!hasRoute) {
 Modify JSON files with a mutation function:
 
 ```ts
-await seed.patching.patchJson('package.json', (data) => {
+await seed.patching.patchJson<{ scripts?: Record<string, string> }>('package.json', (data) => {
   data.scripts ??= {}
   data.scripts.lint = 'biome check'
   data.scripts.format = 'biome format --write'

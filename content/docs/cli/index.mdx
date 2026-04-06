@@ -9,15 +9,21 @@ The `seed` CLI (`@seedcli/cli`) is the companion tool for managing Seed CLI proj
 
 ## Installation
 
+Requires Node.js 24.0.0 or newer.
+
 ```bash
-bun add -g @seedcli/cli
+npm install -g @seedcli/cli
 ```
 
 Or use without installing:
 
 ```bash
-bunx @seedcli/cli <command>
+npx @seedcli/cli <command>
 ```
+
+<Callout type="info">
+  In scaffolded Full and Minimal projects, `@seedcli/cli` is included as a devDependency, so the package scripts can call `seed` without a global install. The Plugin template does not include `@seedcli/cli`.
+</Callout>
 
 ## Commands
 
@@ -33,14 +39,15 @@ Interactive prompts guide you through:
 
 1. **Template** — Full (recommended), Minimal, or Plugin
 2. **Description** — Package description
+3. **Package manager** — npm, pnpm, yarn, or bun
 
 **Flags:**
 
 | Flag | Description |
 |------|-------------|
-| `--skip-install, -s` | Skip dependency installation |
-| `--skip-git` | Skip git initialization |
-| `--skip-prompts, -y` | Skip prompts, use defaults |
+| `--skipInstall, -s` | Skip dependency installation |
+| `--skipGit` | Skip git initialization |
+| `--skipPrompts, -y` | Skip prompts, use defaults |
 
 The generated project structure (Full template):
 
@@ -54,8 +61,8 @@ my-cli/
 │   └── index.ts
 ├── tests/
 │   └── hello.test.ts
+├── .gitignore
 ├── biome.json
-├── bunfig.toml
 ├── package.json
 ├── seed.config.ts
 └── tsconfig.json
@@ -75,15 +82,15 @@ seed g command deploy
 Creates `src/commands/deploy.ts`:
 
 ```ts title="src/commands/deploy.ts"
-import { command } from "@seedcli/core"
+import { command } from "@seedcli/core";
 
 export default command({
   name: "deploy",
-  description: "TODO: Add description",
-  run: async (seed) => {
-    // TODO: Implement
+  description: "TODO: describe the deploy command",
+  run: async ({ print }) => {
+    print.info("Running deploy command");
   },
-})
+});
 ```
 
 #### `seed generate extension <name>`
@@ -96,18 +103,15 @@ seed g extension auth
 Creates `src/extensions/auth.ts`:
 
 ```ts title="src/extensions/auth.ts"
-import { defineExtension } from "@seedcli/core"
+import { defineExtension } from "@seedcli/core";
 
 export default defineExtension({
   name: "auth",
-  description: "TODO: Add description",
+  description: "TODO: describe the auth extension",
   setup: async (seed) => {
-    // TODO: Implement setup
+    // Extend the seed context with your custom functionality
   },
-  teardown: () => {
-    // Clean up resources if needed
-  },
-})
+});
 ```
 
 #### `seed generate plugin <name>`
@@ -117,22 +121,32 @@ seed generate plugin my-plugin
 seed g plugin my-plugin
 ```
 
-Creates an entire plugin directory with `definePlugin()` export, example commands and extensions, type declarations, tests, and build config for npm publishing:
+Creates a root plugin skeleton plus a nested `plugin/` example package:
 
 ```
 my-plugin/
+├── README.md
+├── package.json
 ├── src/
 │   ├── commands/
 │   ├── extensions/
-│   ├── templates/
-│   ├── types.d.ts
 │   └── index.ts
-├── tests/
-├── biome.json
-├── bunfig.toml
-├── package.json
-├── tsconfig.json
-└── tsconfig.build.json
+├── templates/
+└── plugin/
+    ├── biome.json
+    ├── gitignore
+    ├── package.json
+    ├── src/
+    │   ├── commands/
+    │   │   └── hello.ts
+    │   ├── extensions/
+    │   │   └── example.ts
+    │   ├── index.ts
+    │   └── types.d.ts
+    ├── tests/
+    │   └── plugin.test.ts
+    ├── tsconfig.build.json
+    └── tsconfig.json
 ```
 
 ### `seed dev`
@@ -143,7 +157,7 @@ Start development mode with hot reload:
 seed dev
 ```
 
-Spawns `bun --watch` on your entry point. Entry is resolved from:
+Runs your entry point with `node --watch` for instant feedback. Entry is resolved from:
 
 1. `seed.config.ts` → `dev.entry`
 2. `package.json` → `bin` field
@@ -167,7 +181,10 @@ seed build
 seed build --compile
 
 # Compile for specific targets
-seed build --compile --target bun-darwin-arm64,bun-linux-x64
+seed build --compile --target node24-macos-arm64,node24-linux-x64
+
+# Compile for all supported platforms
+seed build --compile --target all
 
 # With options
 seed build --outdir dist --minify --sourcemap
@@ -177,23 +194,25 @@ seed build --outdir dist --minify --sourcemap
 
 | Flag | Description |
 |------|-------------|
-| `--compile` | Compile to standalone binary (requires Bun ≥1.3.9) |
-| `--outfile, -o` | Output file path |
-| `--outdir` | Output directory (default: `dist`) |
-| `--target` | Compile targets (comma-separated) |
+| `--compile` | Compile to standalone binary via Hakobu |
+| `--outfile <path>, -o <path>` | Explicit output file path (single-target only) |
+| `--outdir <dir>` | Output directory (default: `dist`) |
+| `--target <targets>` | Compile target(s), comma-separated, or `all` |
 | `--minify` | Minify output |
 | `--sourcemap` | Generate sourcemaps |
-| `--bytecode` | Bytecode compilation for faster startup |
-| `--splitting` | Enable code splitting |
+| `--external <modules>` | Keep module(s) external (comma-separated) |
+| `--splitting` | Parsed by the CLI but currently has no effect |
 | `--analyze` | Show bundle size analysis |
 
 **Available compile targets:**
 
 | Platform | Targets |
 |----------|---------|
-| macOS | `bun-darwin-arm64`, `bun-darwin-x64`, `bun-darwin-x64-baseline` |
-| Linux | `bun-linux-x64`, `bun-linux-arm64`, `bun-linux-x64-baseline`, `bun-linux-x64-modern`, `bun-linux-x64-musl`, `bun-linux-x64-musl-baseline`, `bun-linux-arm64-musl` |
-| Windows | `bun-windows-x64`, `bun-windows-arm64`, `bun-windows-x64-baseline`, `bun-windows-x64-modern` |
+| macOS | `node24-macos-arm64`, `node24-macos-x64` |
+| Linux | `node24-linux-x64`, `node24-linux-arm64`, `node24-linuxstatic-x64` |
+| Windows | `node24-win-x64`, `node24-win-arm64` |
+
+Use `--target all` to compile for every supported platform at once.
 
 <Callout type="info">
   The build command automatically converts dynamic `.src()` discovery into static imports so the bundler/compiler can trace all dependencies.
@@ -212,8 +231,13 @@ export default defineConfig({
   },
   build: {
     entry: "src/index.ts",
-    outDir: "dist",
-    minify: true,
+    bundle: {
+      outdir: "dist",
+      minify: true,
+    },
+    compile: {
+      targets: ["node24-macos-arm64", "node24-linux-x64", "node24-win-x64"],
+    },
   },
 })
 ```
@@ -223,7 +247,7 @@ export default defineConfig({
 | Flag | Description |
 |------|-------------|
 | `--help, -h` | Show help |
-| `--version, -V` | Show version |
+| `--version, -v` | Show version |
 
 <Callout type="info">
   The `seed` CLI is itself built with the Seed CLI framework — a real-world example of the framework in action.

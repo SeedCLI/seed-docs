@@ -13,7 +13,7 @@ The Builder API provides a fluent, chainable interface for configuring every asp
 import { build } from '@seedcli/core'
 
 const runtime = build('my-cli')
-  .src(import.meta.dir)
+  .src(import.meta.dirname)
   .version('1.0.0')
   .help()
   .debug()
@@ -37,7 +37,7 @@ const builder = build('my-cli')
 Auto-discover commands and extensions from a directory.
 
 ```ts
-builder.src(import.meta.dir)
+builder.src(import.meta.dirname)
 // Discovers:
 //   src/commands/*.ts  → registered as commands
 //   src/extensions/*.ts → registered as extensions
@@ -79,7 +79,7 @@ builder.plugin(['seedcli-plugin-docker', 'seedcli-plugin-aws'])
 
 // From directory
 builder.plugins('./plugins')
-builder.plugins('./plugins', { prefix: 'my-' })
+builder.plugins('./plugins', { matching: 'my-*' })
 ```
 
 ### `.extension(ext)`
@@ -125,7 +125,7 @@ When enabled, `--help` and `-h` flags are automatically added to all commands.
 Enable or disable the `--version` flag:
 
 ```ts
-// Auto-detect from package.json
+// Enable --version; auto-detects from package.json when .src() is set
 builder.version()
 
 // Explicit version string
@@ -167,7 +167,7 @@ builder.middleware(async (seed, next) => {
 
 ### `.onReady(fn)`
 
-Hook that runs after setup but before command execution:
+Hook that runs after the seed context is assembled, before extension setup and command execution:
 
 ```ts
 builder.onReady((seed) => {
@@ -226,19 +226,16 @@ When `runtime.run()` is called, the following happens in order:
 
 1. Register SIGINT/SIGTERM handlers
 2. Strip `--debug`/`--verbose` flags (if enabled)
-3. Parse raw argv
-4. Load config files (if configured)
-5. Discover and load plugins
-6. Register extensions
-7. Assemble the `seed` context (modules loaded lazily)
+3. Handle `--version` / `--help` early exits
+4. Discover and load plugins, register extensions
+5. Route to the matching command
+6. Parse command-specific args and flags
+7. Assemble the `seed` context
 8. Run `onReady` hooks
-9. Route to the matching command
-10. Run extension `setup` functions (topological order)
-11. Run global middleware
-12. Run command-level middleware
-13. Execute `command.run(seed)`
-14. Run extension `teardown` (reverse order)
-15. Cleanup and exit
+9. Run extension `setup` functions (topological order)
+10. Run global middleware → command middleware → `command.run(seed)`
+11. Run extension `teardown` (reverse order)
+12. Cleanup and exit
 
 ## The `run()` Shortcut
 

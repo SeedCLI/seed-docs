@@ -8,33 +8,48 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 ## Prerequisites
 
-Seed CLI requires **Bun 1.3** or later.
+Seed CLI requires **Node.js 24** or later.
 
 ```bash
-# Check your Bun version
-bun --version
+# Check your Node.js version
+node --version
 ```
 
-If you don't have Bun installed:
-
-```bash
-curl -fsSL https://bun.sh/install | bash
-```
+If you need to install or update Node.js, visit [nodejs.org](https://nodejs.org/) or use a version manager like [fnm](https://github.com/Schniz/fnm) or [nvm](https://github.com/nvm-sh/nvm).
 
 ## Scaffolding a New Project
 
 The fastest way to start is with the `create-seedcli` scaffolding tool:
 
-```bash
-bun create seedcli my-cli
-```
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}>
+  <Tab value="npm">
+  ```bash
+  npm create seedcli my-cli
+  ```
+  </Tab>
+  <Tab value="pnpm">
+  ```bash
+  pnpm create seedcli my-cli
+  ```
+  </Tab>
+  <Tab value="yarn">
+  ```bash 
+  yarn create seedcli my-cli 
+  ```
+  </Tab>
+  <Tab value="bun">
+  ```bash
+  bun create seedcli my-cli
+  ```
+  </Tab>
+</Tabs>
 
 This creates a new project with:
 
 - Pre-configured `tsconfig.json`
 - Example commands
-- Build scripts for both npm package and standalone binary
-- Dev mode with `bun --watch`
+- Build and compile scripts via `@seedcli/cli`
+- Dev mode with file watching
 
 ## Manual Installation
 
@@ -42,33 +57,73 @@ This creates a new project with:
 
 Every Seed CLI project needs the core package:
 
-```bash
-bun add @seedcli/core
-```
+{/* biome-ignore format: preserve multiline Tab children for MDX rendering */}
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}>
+  <Tab value="npm">
+  ```bash
+  npm install @seedcli/core
+  ```
+  </Tab>
+  <Tab value="pnpm">
+  ```bash
+  pnpm add @seedcli/core
+  ```
+  </Tab>
+  <Tab value="yarn">
+  ```bash
+  yarn add @seedcli/core
+  ```
+  </Tab>
+  <Tab value="bun">
+  ```bash
+  bun add @seedcli/core
+  ```
+  </Tab>
+</Tabs>
 
 ### Individual Modules
 
 Install only the modules you need:
 
-<Tabs items={["Print", "Prompt", "Filesystem", "System", "HTTP"]}>
-  <Tab value="Print">```bash bun add @seedcli/print ```</Tab>
-  <Tab value="Prompt">```bash bun add @seedcli/prompt ```</Tab>
-  <Tab value="Filesystem">```bash bun add @seedcli/filesystem ```</Tab>
-  <Tab value="System">```bash bun add @seedcli/system ```</Tab>
-  <Tab value="HTTP">```bash bun add @seedcli/http ```</Tab>
-</Tabs>
+```bash
+# Examples (use your package manager of choice)
+npm install @seedcli/print @seedcli/prompt @seedcli/filesystem
+```
+
+<Callout type="info">
+  When using modules inside a Seed command's `run` function, built-in context modules like `print`, `prompt`, and `filesystem` are available automatically via the seed context — no direct install needed.
+</Callout>
 
 ### Umbrella Package
 
 Or install everything at once:
 
-```bash
-bun add @seedcli/seed
-```
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}>
+  <Tab value="npm">
+  ```bash
+  npm install @seedcli/seed
+  ```
+  </Tab>
+  <Tab value="pnpm">
+  ```bash
+  pnpm add @seedcli/seed
+  ```
+  </Tab>
+  <Tab value="yarn">
+  ```bash
+  yarn add @seedcli/seed
+  ```
+  </Tab>
+  <Tab value="bun">
+  ```bash
+  bun add @seedcli/seed
+  ```
+  </Tab>
+</Tabs>
 
 ## Project Structure
 
-A typical Seed CLI project looks like this:
+The **Full** template scaffolds the following structure:
 
 ```
 my-cli/
@@ -80,16 +135,20 @@ my-cli/
 │   └── index.ts            # Entry point
 ├── tests/
 │   └── hello.test.ts       # Example test
+├── .gitignore
 ├── biome.json
-├── bunfig.toml
 ├── package.json
 ├── seed.config.ts           # CLI configuration
 └── tsconfig.json
 ```
 
+<Callout type="info">
+  The **Minimal** template is slimmer — it omits `seed.config.ts` and `extensions/`, but still includes a basic test file. See [create-seedcli](/cli/create-seedcli) for a full template comparison.
+</Callout>
+
 ## TypeScript Configuration
 
-Seed CLI is TypeScript-first. Your `tsconfig.json` should include:
+The scaffolded `tsconfig.json` (Full template) includes:
 
 ```json title="tsconfig.json"
 {
@@ -104,30 +163,11 @@ Seed CLI is TypeScript-first. Your `tsconfig.json` should include:
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
-    "types": ["@types/bun"]
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
-
 ```
 
-## Building
-
-<Tabs items={["npm package", "Standalone binary"]}>
-  <Tab value="npm package">
-    ```
-    bash bunx seed build --outdir dist --target bun 
-    ```
-  </Tab>
-  <Tab value="Standalone binary">
-    ```
-    bash bunx seed build --compile --outfile my-cli
-    ```
-  </Tab>
-</Tabs>
-
-<Callout type="info">
-  Bun's `--compile` flag produces a single executable binary with no runtime
-  dependencies.
-</Callout>
+For packaging guidance, see [Build](/build) and [Distribution](/distribution). For the full `seed build` flag reference, see [seed build](/cli#seed-build).

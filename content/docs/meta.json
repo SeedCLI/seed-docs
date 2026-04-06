@@ -1,14 +1,18 @@
 {
-  "pages": [
-    "index",
-    "installation",
-    "quick-start",
-    "llms-txt",
-    "---Concepts---",
-    "...concepts",
-    "---Modules---",
-    "...modules",
-    "---CLI Tools---",
-    "...cli"
-  ]
+	"pages": [
+		"index",
+		"installation",
+		"quick-start",
+		"llms-txt",
+		"agent-skill",
+		"---Concepts---",
+		"...concepts",
+		"---Modules---",
+		"...modules",
+		"---Build & Distribution---",
+		"build",
+		"distribution",
+		"---CLI Tools---",
+		"...cli"
+	]
 }

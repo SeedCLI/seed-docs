@@ -4,7 +4,7 @@ description: Shell commands, system info, and executable discovery.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/system
+npm install @seedcli/system
 ```
 
 The system module provides shell command execution, executable discovery, system information, and environment access.
@@ -30,9 +30,9 @@ console.log(result.exitCode)
 | `stream` | `boolean` | `false` | Stream output to terminal |
 | `stdin` | `string \| Buffer` | — | Input to feed to command |
 | `timeout` | `number` | — | Timeout in milliseconds |
-| `throwOnError` | `boolean` | `false` | Throw on non-zero exit |
+| `throwOnError` | `boolean` | `true` | Throw on non-zero exit |
 | `shell` | `boolean` | `true` | Run in shell |
-| `trim` | `boolean` | `true` | Trim stdout/stderr whitespace |
+| `trim` | `boolean` | `true` | Trim trailing whitespace from stdout/stderr |
 
 ### Exec Result
 
@@ -47,7 +47,7 @@ console.log(result.exitCode)
 await seed.system.exec('npm install', { stream: true })
 
 // With environment variables
-const result = await seed.system.exec('echo $MY_VAR', {
+const result = await seed.system.exec('node -p "process.env.MY_VAR"', {
   env: { MY_VAR: 'hello' },
 })
 
@@ -64,7 +64,7 @@ await seed.system.exec('long-task', { timeout: 30000 })
 
 ### `shell`
 
-Direct access to Bun's `$` shell template literal:
+Execute shell commands using template literals:
 
 ```ts
 const { shell } = seed.system
@@ -72,8 +72,9 @@ const { shell } = seed.system
 await shell`git add .`
 await shell`git commit -m "feat: initial commit"`
 
-// Pipe commands
-const result = await shell`cat package.json | grep version`
+// Portable shell example
+const result = await shell`node -p "process.version"`
+console.log(result.stdout)
 ```
 
 ## Executable Discovery
@@ -143,7 +144,7 @@ Check if the terminal supports interactive prompts:
 
 ```ts
 if (seed.system.isInteractive()) {
-  const name = await seed.prompt.input('Name?')
+  const name = await seed.prompt.input({ message: 'Name?' })
 } else {
   // CI or piped — use defaults
 }
@@ -157,6 +158,6 @@ import { ExecError, ExecutableNotFoundError, ExecTimeoutError } from '@seedcli/s
 
 | Error | Description |
 |-------|-------------|
-| `ExecError` | Command exited with non-zero code (when `throwOnError: true`) |
+| `ExecError` | Command exited with non-zero code by default; set `{ throwOnError: false }` to return an `exitCode` instead |
 | `ExecutableNotFoundError` | Executable not found (from `whichOrThrow`) |
 | `ExecTimeoutError` | Command exceeded timeout |

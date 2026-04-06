@@ -4,7 +4,7 @@ description: Higher-level UI components for rich CLI output.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/ui
+npm install @seedcli/ui
 ```
 
 The UI module provides higher-level, composed UI components that build on top of the print module. Use it for polished, consistent CLI output.
@@ -14,18 +14,27 @@ The UI module provides higher-level, composed UI components that build on top of
 Display a styled header:
 
 ```ts
-seed.ui.header('My CLI', {
-  subtitle: 'v1.0.0',
-  color: 'green',
-})
+seed.print.info(
+  seed.ui.header('My CLI', {
+    subtitle: 'v1.0.0',
+    color: 'green',
+  }),
+)
 ```
 
 Output:
 ```
-╔═══════════════════╗
-║      My CLI       ║
-║      v1.0.0       ║
-╚═══════════════════╝
+╭───────────────────────────────────────╮
+│                                       │
+│     __  __          ____ _     ___    │
+│    |  \/  |_   _   / ___| |   |_ _|   │
+│    | |\/| | | | | | |   | |    | |    │
+│    | |  | | |_| | | |___| |___ | |    │
+│    |_|  |_|\__, |  \____|_____|___|   │
+│            |___/                      │
+│   v1.0.0                              │
+│                                       │
+╰───────────────────────────────────────╯
 ```
 
 ### Header Options
@@ -40,18 +49,18 @@ Output:
 Show the result of an operation:
 
 ```ts
-seed.ui.status('Database migration', 'success')
-seed.ui.status('Cache invalidation', 'fail')
-seed.ui.status('CDN purge', 'skip')
-seed.ui.status('DNS propagation', 'pending')
+seed.print.info(seed.ui.status('Database migration', 'success'))
+seed.print.info(seed.ui.status('Cache invalidation', 'fail'))
+seed.print.info(seed.ui.status('CDN purge', 'skip'))
+seed.print.info(seed.ui.status('DNS propagation', 'pending'))
 ```
 
 Output:
 ```
 ✔ Database migration
 ✖ Cache invalidation
-○ CDN purge
-◌ DNS propagation
+◌ CDN purge
+… DNS propagation
 ```
 
 ### Status States
@@ -60,8 +69,8 @@ Output:
 |-------|--------|-------------|
 | `'success'` | `✔` | Completed successfully |
 | `'fail'` | `✖` | Failed |
-| `'skip'` | `○` | Skipped |
-| `'pending'` | `◌` | Not yet started |
+| `'skip'` | `◌` | Skipped |
+| `'pending'` | `…` | Pending |
 
 ## List
 
@@ -69,17 +78,21 @@ Display a formatted list:
 
 ```ts
 // Bullet list (default)
-seed.ui.list(['Install dependencies', 'Run migrations', 'Start server'])
+seed.print.info(seed.ui.list(['Install dependencies', 'Run migrations', 'Start server']))
 
 // Numbered list
-seed.ui.list(['First step', 'Second step', 'Third step'], {
-  ordered: true,
-})
+seed.print.info(
+  seed.ui.list(['First step', 'Second step', 'Third step'], {
+    ordered: true,
+  }),
+)
 
 // Custom marker
-seed.ui.list(['Feature A', 'Feature B'], {
-  marker: 'arrow',
-})
+seed.print.info(
+  seed.ui.list(['Feature A', 'Feature B'], {
+    marker: 'arrow',
+  }),
+)
 ```
 
 ### List Options
@@ -95,30 +108,31 @@ Display a countdown timer:
 
 ```ts
 await seed.ui.countdown(5, 'Deploying in')
-// Deploying in 5...
-// Deploying in 4...
-// Deploying in 3...
-// Deploying in 2...
-// Deploying in 1...
+// Writes "Deploying in 5s", updates in place every second, and clears the line when done.
 ```
 
-The countdown updates in-place and resolves when it reaches zero.
+The countdown updates in-place and clears the line when it reaches zero.
 
 ## Re-exported Components
 
-The UI module also re-exports these components from the print module for convenience:
+The UI module also re-exports these raw components from the print module for convenience:
 
 ```ts
-// These are the same as seed.print.* equivalents
-seed.ui.divider({ title: 'Section' })
-seed.ui.keyValue({ Name: 'app', Version: '1.0.0' })
-seed.ui.tree({ label: 'root', children: [...] })
+// Raw re-exports from @seedcli/print. These do not print automatically.
+seed.print.info(seed.ui.divider({ title: 'Section' }))
+seed.print.info(seed.ui.keyValue({ Name: 'app', Version: '1.0.0' }))
+seed.print.info(seed.ui.tree({ label: 'root', children: [...] }))
+
+const progress = seed.ui.progress({ total: 3 })
+seed.print.info(progress.update(1))
 ```
 
 ## Example: Deployment Summary
 
 ```ts
-seed.ui.header('Deployment', { subtitle: 'Production', color: 'cyan' })
+seed.print.info(
+  seed.ui.header('Deployment', { subtitle: 'Production', color: 'cyan' }),
+)
 seed.print.newline()
 
 seed.print.keyValue({
@@ -129,11 +143,11 @@ seed.print.keyValue({
 })
 seed.print.newline()
 
-seed.print.divider('Steps')
-seed.ui.status('Build', 'success')
-seed.ui.status('Test', 'success')
-seed.ui.status('Deploy', 'success')
-seed.ui.status('Health check', 'pending')
+seed.print.divider({ title: 'Steps' })
+seed.print.info(seed.ui.status('Build', 'success'))
+seed.print.info(seed.ui.status('Test', 'success'))
+seed.print.info(seed.ui.status('Deploy', 'success'))
+seed.print.info(seed.ui.status('Health check', 'pending'))
 seed.print.newline()
 
 seed.print.box('Deployment complete!', {

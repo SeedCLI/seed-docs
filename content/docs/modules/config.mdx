@@ -4,8 +4,10 @@ description: Load configuration files with automatic format detection.
 ---
 
 ```bash tab="Install"
-bun add @seedcli/config
+npm install @seedcli/config
 ```
+
+Requires Node.js >= 24.0.0.
 
 The config module uses [c12](https://github.com/unjs/c12) (the config loader that powers Nuxt) to load configuration from multiple file formats with layered merging.
 
@@ -20,11 +22,12 @@ This searches for config files in the following order:
 1. `myapp.config.ts`
 2. `myapp.config.js`
 3. `myapp.config.mjs`
-4. `.myapprc`
-5. `.myapprc.json`
-6. `.myapprc.yaml`
-7. `.myapprc.toml`
-8. `package.json` → `myapp` field
+4. `myapp.config.json`
+5. `.myapprc`
+6. `.myapprc.json`
+7. `.myapprc.yaml`
+8. `.myapprc.toml`
+9. `package.json` → `myapp` field
 
 ### Load Options
 
@@ -53,6 +56,7 @@ interface ResolvedConfig<T> {
 interface ConfigLayer {
   config: Record<string, unknown>
   source?: string       // Where this config came from
+  sourceOptions?: Record<string, unknown>
 }
 ```
 
@@ -90,7 +94,7 @@ Use dot-notation or bracket-notation to access nested config values:
 const port = seed.config.get(config, 'server.port')
 
 // Bracket notation
-const host = seed.config.get(config, 'server.host', 'localhost')
+const host = seed.config.get({ 'server.host': 'localhost' }, '[server.host]', 'localhost')
 ```
 
 The `get` function takes an object and a path string, with an optional default value.
@@ -114,15 +118,13 @@ const runtime = build('my-cli')
 The user creates a config file:
 
 ```ts title="myapp.config.ts"
-import { defineConfig } from '@seedcli/core'
-
-export default defineConfig({
+export default {
   outputDir: 'build',
   verbose: true,
-})
+}
 ```
 
-`defineConfig` is a passthrough function that provides type checking for the config object.
+End-user config files loaded by `@seedcli/config` should export a plain object. `defineConfig()` from `@seedcli/core` is only for framework `seed.config.ts` files.
 
 ## Environment-Specific Config
 
@@ -143,7 +145,7 @@ The config system merges multiple layers in order of precedence:
 2. config file
 3. environment-specific config
 4. package.json field
-(highest wins)
+5. overrides (highest)
 ```
 
 ```ts
