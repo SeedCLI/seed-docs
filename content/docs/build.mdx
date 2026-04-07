@@ -33,9 +33,58 @@ npm run build
 seed build
 ```
 
-`seed build` reads your project entry point, resolves auto-discovered commands, extensions, and plugins into a static build entry, then bundles the result into `dist/`.
+`seed build` reads your project entry point, resolves auto-discovered commands, extensions, and plugins into a static build entry, then bundles the result into `dist/index.js`.
 
-This is the usual build mode for CLIs you plan to publish on npm.
+The output is a **plain ES module** — typically tens of KB, executable directly via `node dist/index.js`. This is the usual build mode for CLIs you plan to publish on npm.
+
+### Externals
+
+In bundle mode, `seed build` automatically keeps your runtime dependencies external so the published tarball stays small and uses npm's normal install graph:
+
+- **`dependencies`**, **`peerDependencies`**, and **`optionalDependencies`** from `package.json` → kept external
+- **`devDependencies`** and workspace packages → inlined into the bundle
+- **Subpaths** like `react/jsx-runtime` are matched against the package root (so adding `react` as an external also externalizes `react/jsx-runtime`)
+
+You can add more externals via the `build.external` array in `seed.config.ts`:
+
+```ts title="seed.config.ts"
+import { defineConfig } from "@seedcli/core";
+
+export default defineConfig({
+  build: {
+    external: ["some-native-module", "another-package"],
+  },
+});
+```
+
+…or on the CLI for one-off builds:
+
+```bash
+seed build --external some-native-module,another-package
+```
+
+### Shebang and Executable Bit
+
+`seed build` automatically:
+
+- prepends `#!/usr/bin/env node` to the bundle (unless your entry source already declares one — no double-shebang)
+- runs `chmod +x` on the output so it works directly as a `bin` entry
+
+This means you can point `package.json#bin` straight at `dist/index.js`:
+
+```json title="package.json"
+{
+  "type": "module",
+  "bin": {
+    "my-cli": "./dist/index.js"
+  },
+  "files": ["dist"]
+}
+```
+
+### Sourcemaps
+
+Pass `--sourcemap` (or set `build.bundle.sourcemap: true` in config) to emit `dist/index.js.map` alongside the bundle.
 
 ## Compile a Standalone Executable
 
@@ -77,8 +126,11 @@ import { defineConfig } from "@seedcli/core";
 
 export default defineConfig({
   build: {
+    // Applies to both bundle and compile modes
+    external: ["some-native-module"],
     bundle: {
       outdir: "dist",
+      sourcemap: true,
     },
     compile: {
       targets: ["node24-macos-arm64", "node24-linux-x64", "node24-win-x64"],

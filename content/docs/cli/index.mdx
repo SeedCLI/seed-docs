@@ -157,24 +157,45 @@ Start development mode with hot reload:
 seed dev
 ```
 
-Runs your entry point with `node --watch` for instant feedback. Entry is resolved from:
+Runs your entry point with `node --watch` for instant feedback. For TypeScript entries (`.ts`, `.tsx`, `.mts`, `.cts`), `seed dev` also loads the [`tsx`](https://tsx.is) ESM loader (`node --watch --import tsx ...`) so you can use the standard TypeScript ESM conventions:
+
+- `import "./foo.js"` resolves to `foo.ts` when only the TS source exists
+- `import "./foo"` (no extension) resolves to `foo.ts`, `foo.tsx`, etc.
+
+`tsx` is included as a dev dependency in scaffolded Full and Minimal projects. For plain `.js`/`.mjs` entries the loader is skipped.
+
+Entry is resolved from:
 
 1. `seed.config.ts` → `dev.entry`
 2. `package.json` → `bin` field
 3. Common defaults: `src/index.ts`, `src/cli.ts`, `index.ts`
+
+**Forwarding args to your entry script**
+
+Anything after a literal `--` is forwarded as `process.argv` to the spawned entry script, and is preserved across hot reloads:
+
+```bash
+seed dev -- setup --from /tmp --dryRun
+```
+
+The entry script's `process.argv` will receive `["setup", "--from", "/tmp", "--dryRun"]`.
 
 **Flags:**
 
 | Flag | Description |
 |------|-------------|
 | `--entry` | Override entry point path |
+| `-- <args...>` | Forward everything after `--` to your entry script's `process.argv` |
 
 ### `seed build`
 
-Bundle or compile your CLI for distribution:
+Bundle or compile your CLI for distribution. `seed build` has two modes:
+
+- **Bundle mode** (default) — produces a plain JavaScript ES module at `dist/index.js`, suitable for `npm publish`. Typically tens of KB. The bundle runs directly via `node dist/index.js` (or as a `bin` entry) on Node.js 24+.
+- **Compile mode** (`--compile`) — produces a standalone executable via Hakobu with an embedded Node runtime. Tens of MB. Use this when shipping binaries via GitHub Releases.
 
 ```bash
-# Bundle to dist/
+# Bundle to dist/index.js (real JS, not a binary)
 seed build
 
 # Compile to standalone binary
@@ -190,17 +211,19 @@ seed build --compile --target all
 seed build --outdir dist --minify --sourcemap
 ```
 
+In bundle mode, `dependencies`, `peerDependencies`, and `optionalDependencies` from your `package.json` are kept as runtime imports so the published tarball stays small and uses npm's normal install graph. Workspace packages and `devDependencies` are inlined. You can add more externals via `build.external` in `seed.config.ts` or `--external` on the CLI. The bundle is `chmod +x`'d and gets a `#!/usr/bin/env node` shebang (unless your entry source already has one), so it works directly as a `bin` entry.
+
 **Flags:**
 
 | Flag | Description |
 |------|-------------|
-| `--compile` | Compile to standalone binary via Hakobu |
+| `--compile` | Compile to standalone binary via Hakobu (otherwise produce a JS bundle) |
 | `--outfile <path>, -o <path>` | Explicit output file path (single-target only) |
 | `--outdir <dir>` | Output directory (default: `dist`) |
-| `--target <targets>` | Compile target(s), comma-separated, or `all` |
+| `--target <targets>` | Compile target(s), comma-separated, or `all` (used with `--compile`) |
 | `--minify` | Minify output |
 | `--sourcemap` | Generate sourcemaps |
-| `--external <modules>` | Keep module(s) external (comma-separated) |
+| `--external <modules>` | Keep module(s) external (comma-separated). Works in both modes. |
 | `--splitting` | Parsed by the CLI but currently has no effect |
 | `--analyze` | Show bundle size analysis |
 
