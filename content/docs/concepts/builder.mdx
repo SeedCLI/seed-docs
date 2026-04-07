@@ -125,7 +125,7 @@ When enabled, `--help` and `-h` flags are automatically added to all commands.
 Enable or disable the `--version` flag:
 
 ```ts
-// Enable --version; auto-detects from package.json when .src() is set
+// Enable --version; auto-detects from your project's package.json
 builder.version()
 
 // Explicit version string
@@ -134,6 +134,8 @@ builder.version('2.1.0')
 // Disable
 builder.noVersion()
 ```
+
+When called without an argument, `.version()` walks up from the entry script's location on disk to find the nearest `package.json` and reads its `version` field. This works in dev mode (`bun src/index.ts`), in bundled output (`node dist/index.js`), and when the CLI is installed globally — so you can keep the version in a single source of truth without importing `package.json` yourself.
 
 ### `.debug()`
 
